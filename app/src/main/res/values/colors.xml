@@ -1,0 +1,5 @@
+<resources>
+    <color name="oled_black">#0A0A0C</color>
+    <color name="cinema_crimson">#E11D48</color>
+    <color name="surface_dark">#131318</color>
+</resources>
