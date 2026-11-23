@@ -1,0 +1,3 @@
+-keep class com.swara.play.model.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**

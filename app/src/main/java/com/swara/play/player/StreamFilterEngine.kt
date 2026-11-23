@@ -1,0 +1,78 @@
+package com.swara.play.player
+
+import android.net.Uri
+
+object StreamFilterEngine {
+    private val safeVideoExtensions = listOf(".m3u8", ".mp4", ".ts", ".m4s", ".mpd", ".vtt", ".srt", ".key")
+
+    private val blockedHosts = setOf(
+        "doubleclick.net", "googlesyndication.com", "googleadservices.com", "adservice.google.com",
+        "popads.net", "popcash.net", "propellerads.com", "adsterra.com", "highperformanceformat.com",
+        "exoclick.com", "juicyads.com", "trafficjunky.net", "hilltopads.net", "clickadu.com",
+        "onclickalgo.com", "acscdn.com", "adsco.re", "adskeeper.com", "mgid.com", "taboola.com",
+        "outbrain.com", "histats.com", "mc.yandex.ru", "a-ads.com", "bidvertiser.com", "monetag.com",
+        "pushame.com", "notifpush.com", "ad-maven.com", "admaven.com", "bet365.com", "1xbet.com",
+        "melbet.com", "realsrv.com", "tsyndicate.com", "dtscout.com", "whos.amung.us"
+    )
+
+    private val blockedKeywords = listOf(
+        "popunder", "popads", "adserver", "ad_banner", "doubleclick", "vast.xml",
+        "pagead", "/ads/", "banner_ad", "clicktracker", "redirect_ad"
+    )
+
+    fun shouldBlock(url: String): Boolean {
+        val lower = url.lowercase()
+        if (safeVideoExtensions.any { lower.contains(it) }) return false
+        val host = runCatching { Uri.parse(lower).host.orEmpty() }.getOrDefault("")
+        if (host.isNotBlank()) {
+            for (blocked in blockedHosts) {
+                if (host == blocked || host.endsWith(".$blocked")) return true
+            }
+        }
+        return blockedKeywords.any { lower.contains(it) }
+    }
+
+    fun buildEnhanceAndDetectJs(preferredLangIso: String): String {
+        val lang = preferredLangIso.lowercase().ifBlank { "id" }
+        return """
+            (function() {
+                try {
+                    window.open = function() { return null; };
+                    var selectors = ['iframe[src*="ads"]','div[id*="ad-"]','div[class*="popup"]','a[target="_blank"][href*="click"]'];
+                    selectors.forEach(function(sel) {
+                        document.querySelectorAll(sel).forEach(function(el) {
+                            if (el && el.parentNode) el.parentNode.removeChild(el);
+                        });
+                    });
+                    // Auto-enable preferred device language textTrack if present on HTML5 video
+                    var videos = document.querySelectorAll('video');
+                    videos.forEach(function(v) {
+                        if (v.textTracks && v.textTracks.length > 0) {
+                            for (var i = 0; i < v.textTracks.length; i++) {
+                                var t = v.textTracks[i];
+                                var tl = (t.language || '').toLowerCase();
+                                var lbl = (t.label || '').toLowerCase();
+                                if (tl.indexOf('$lang') !== -1 || (('$lang' === 'id') && (lbl.indexOf('indo') !== -1 || tl === 'in'))) {
+                                    t.mode = 'showing';
+                                }
+                            }
+                        }
+                    });
+                    var bodyText = (document.body && document.body.innerText) ? document.body.innerText.toLowerCase() : '';
+                    if (bodyText.indexOf('error code 522') !== -1 ||
+                        bodyText.indexOf('connection timed out') !== -1 ||
+                        bodyText.indexOf('error code 521') !== -1 ||
+                        bodyText.indexOf('error code 502') !== -1 ||
+                        bodyText.indexOf('error code 520') !== -1 ||
+                        bodyText.indexOf("we couldn't find this content") !== -1 ||
+                        bodyText.indexOf('media not found') !== -1 ||
+                        bodyText.indexOf('video not available') !== -1 ||
+                        bodyText.indexOf('404 not found') !== -1) {
+                        return 'STREAM_ERROR';
+                    }
+                } catch (e) {}
+                return 'OK';
+            })();
+        """
+    }
+}
