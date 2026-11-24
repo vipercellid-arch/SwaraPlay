@@ -1,0 +1,70 @@
+name: Release SwaraPlay Pre-release APK
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle Cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant Execute Permission for Gradlew
+        run: chmod +x gradlew
+
+      - name: Prepare Release Signing Keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.SWARAPLAY_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.SWARAPLAY_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.SWARAPLAY_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.SWARAPLAY_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > app/swaraplay-release.jks
+            echo "SIGNING_STORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+            echo "SIGNING_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
+            echo "SIGNING_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+          else
+            echo "SIGNING_STORE_PASSWORD=swaraplay2026" >> "$GITHUB_ENV"
+            echo "SIGNING_KEY_ALIAS=swaraplay" >> "$GITHUB_ENV"
+            echo "SIGNING_KEY_PASSWORD=swaraplay2026" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build Mobile & TV Release APKs
+        run: ./gradlew :app:assembleMobileRelease :app:assembleTvRelease --no-daemon
+
+      - name: Package Release APKs
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/mobile/release/app-mobile-release.apk dist/SwaraPlay-v8.1.1.apk
+          cp app/build/outputs/apk/tv/release/app-tv-release.apk dist/SwaraPlay-TV-v8.1.1.apk
+          ls -lh dist/
+
+      - name: Publish GitHub Pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v8.1.1"
+          TITLE="SwaraPlay v8.1.1 (Pre-release)"
+          NOTES="SwaraPlay v8.1.1: Basis penuh Euthopiar (UI Liquid Glass, animasi, navigasi, player native Media3, multi-profil, unduhan, plugin JS & addon Stremio) + Penyedia bawaan Anime (AllAnime Direct HLS + Otakudesu/Samehadaku Sub Indo) + Subtitle Bahasa Indonesia otomatis + Rebranding penuh SwaraPlay."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/SwaraPlay-v8.1.1.apk dist/SwaraPlay-TV-v8.1.1.apk --clobber
+            gh release edit "$TAG" --title "$TITLE" --notes "$NOTES" --prerelease
+          else
+            gh release create "$TAG" dist/SwaraPlay-v8.1.1.apk dist/SwaraPlay-TV-v8.1.1.apk --title "$TITLE" --notes "$NOTES" --prerelease
+          fi
