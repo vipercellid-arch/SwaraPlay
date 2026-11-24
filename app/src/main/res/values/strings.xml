@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SwaraPlay</string>
+    <string name="download_channel_name">Unduhan</string>
+    <string name="download_channel_description">Progres dan status unduhan media</string>
+
+    <!-- Pesan Kesalahan -->
+    <string name="error_offline_title">Kamu sedang offline</string>
+    <string name="error_offline_hint">Periksa koneksi internet lalu coba lagi.</string>
+    <string name="error_source_failed_title">Sumber ini sedang tidak tersedia</string>
+    <string name="error_source_failed_hint">Coba sumber lain yang tersedia.</string>
+    <string name="error_no_sources_title">Belum ada sumber</string>
+    <string name="error_no_sources_hint">Tambahkan sumber untuk mulai menonton.</string>
+    <string name="error_generic_title">Terjadi kesalahan</string>
+    <string name="error_generic_hint">Coba lagi beberapa saat lagi.</string>
+    <string name="error_no_results_title">Tidak ada hasil</string>
+    <string name="error_no_results_query_title">Tidak ada hasil untuk "%1$s"</string>
+    <string name="error_no_results_hint">Periksa ejaan judul atau coba kata kunci lain.</string>
+
+    <!-- Aksi -->
+    <string name="action_retry">Coba Lagi</string>
+    <string name="action_try_another_source">Coba Sumber Lain</string>
+    <string name="action_go_back">Kembali</string>
+    <string name="action_add_source">Tambah Sumber</string>
+    <string name="action_connect">Hubungkan</string>
+    <string name="action_disconnect">Putuskan</string>
+    <string name="action_save">Simpan</string>
+    <string name="action_cancel">Batal</string>
+    <string name="action_done">Selesai</string>
+    <string name="action_clear">Bersihkan</string>
+
+    <!-- Bagian Pengaturan -->
+    <string name="settings_title">Pengaturan</string>
+    <string name="settings_section_account">Akun &amp; Profil</string>
+    <string name="settings_section_sources">Sumber Konten</string>
+    <string name="settings_section_accounts">Akun Terhubung</string>
+    <string name="settings_section_playback">Pemutaran</string>
+    <string name="settings_section_subtitles">Subtitle &amp; Audio</string>
+    <string name="settings_section_downloads">Unduhan &amp; Penyimpanan</string>
+    <string name="settings_section_privacy">Privasi</string>
+    <string name="settings_section_network_privacy">Jaringan &amp; Privasi</string>
+    <string name="settings_section_advanced">Preferensi Lanjutan</string>
+    <string name="settings_section_about">Tentang</string>
+
+    <!-- Item Pengaturan -->
+    <string name="settings_sources_title">Sumber &amp; Plugin</string>
+    <string name="settings_sources_subtitle">Tambah, perbarui, atau kelola penyedia</string>
+    <string name="settings_sources_active_count">%1$d aktif</string>
+    <string name="settings_active_source_title">Sumber Aktif</string>
+    <string name="settings_active_source_subtitle">Sumber utama untuk katalog dan pencarian</string>
+    <string name="settings_trakt_title">Sinkronkan Riwayat Tontonan</string>
+    <string name="settings_trakt_subtitle_connected">Terhubung sebagai @%1$s</string>
+    <string name="settings_trakt_subtitle_disconnected">Sinkronkan progres dan riwayat tontonan</string>
+    <string name="settings_trakt_connected">Terhubung</string>
+    <string name="settings_trakt_not_connected">Belum terhubung</string>
+    <string name="settings_trakt_auto_scrobble_title">Sinkron Otomatis</string>
+    <string name="settings_trakt_auto_scrobble_subtitle">Perbarui progres tontonan secara otomatis</string>
+    <string name="settings_simkl_title">Akun Simkl</string>
+    <string name="settings_simkl_subtitle_connected">Terhubung ke Simkl</string>
+    <string name="settings_simkl_subtitle_disconnected">Sinkronkan anime, serial TV, dan film</string>
+    <string name="settings_simkl_auto_scrobble_title">Sinkron Otomatis</string>
+    <string name="settings_simkl_auto_scrobble_subtitle">Perbarui Simkl otomatis saat menonton</string>
+    <string name="settings_whats_new_title">Yang Baru</string>
+    <string name="settings_whats_new_subtitle">Lihat fitur dan pembaruan terbaru SwaraPlay</string>
+    <string name="settings_debrid_title">Layanan Tautan Cepat</string>
+    <string name="settings_debrid_subtitle">Tautan kecepatan tinggi via Real-Debrid, AllDebrid, atau TorBox</string>
+    <string name="settings_default_quality_title">Kualitas Streaming</string>
+    <string name="settings_default_quality_subtitle">Resolusi video pilihan</string>
+    <string name="settings_autoplay_next_title">Putar Episode Berikutnya Otomatis</string>
+    <string name="settings_autoplay_next_subtitle">Lanjutkan episode berikutnya secara otomatis</string>
+    <string name="settings_seek_interval_title">Interval Lompat Ketuk Ganda</string>
+    <string name="settings_seek_interval_subtitle">Jumlah detik maju atau mundur</string>
+    <string name="settings_subtitle_size_title">Ukuran Subtitle</string>
+    <string name="settings_subtitle_color_title">Warna Subtitle</string>
+    <string name="settings_subtitle_preview_text">Pratinjau teks subtitle Bahasa Indonesia</string>
+    <string name="settings_wifi_only_title">Unduh Hanya via Wi-Fi</string>
+    <string name="settings_wifi_only_subtitle">Hemat kuota data seluler</string>
+    <string name="settings_storage_cache_title">Penyimpanan &amp; Cache</string>
+    <string name="settings_storage_cache_subtitle">Cache poster dan data: %1$s</string>
+    <string name="settings_clear_cache_action">Bersihkan Cache</string>
+    <string name="settings_doh_title">DNS Aman (DoH)</string>
+    <string name="settings_doh_subtitle">Resolusi domain terenkripsi</string>
+    <string name="settings_extra_content_title">Sumber Tambahan</string>
+    <string name="settings_extra_content_subtitle">Tampilkan katalog tambahan opsional</string>
+    <string name="settings_card_scale_title">Ukuran Poster</string>
+    <string name="settings_card_scale_subtitle">Atur skala poster di seluruh baris katalog</string>
+
+    <!-- Cast & Pemutar Eksternal -->
+    <string name="cast_title">Cast &amp; Pemutar Eksternal</string>
+    <string name="cast_subtitle">Kirim tayangan ke Smart TV atau pemutar eksternal</string>
+    <string name="cast_external_player_header">Buka di Pemutar Eksternal</string>
+    <string name="cast_network_header">Cast ke TV</string>
+    <string name="cast_searching_devices">Mencari perangkat…</string>
+    <string name="cast_no_devices_found">Tidak ada perangkat ditemukan di Wi-Fi ini. Ketuk segarkan untuk memindai.</string>
+    <string name="cast_copy_stream_link">Salin Tautan Video</string>
+    <string name="cast_stream_link_copied">Tautan video disalin ke papan klip</string>
+
+    <!-- Kontrol Pemutar -->
+    <string name="player_speed">Kecepatan</string>
+    <string name="player_audio_subtitles">Audio &amp; Subtitle</string>
+    <string name="player_settings">Pengaturan</string>
+    <string name="player_next_episode">Episode Berikutnya</string>
+    <string name="player_connecting">Menghubungkan ke stream…</string>
+    <string name="player_finding_source">Mencari sumber tayangan…</string>
+    <string name="player_starting">Memulai pemutaran…</string>
+    <string name="player_taking_longer">Memuat lebih lama dari biasanya</string>
+    <string name="player_skip_recap">Lewati Rekap</string>
+    <string name="player_skip_outro">Lewati Outro</string>
+    <string name="player_episodes">Episode</string>
+    <string name="player_sources">Sumber</string>
+    <string name="player_quality">Kualitas</string>
+    <string name="player_skip_intro">Lewati Intro</string>
+
+    <!-- Detail Media -->
+    <string name="details_play">Putar</string>
+    <string name="details_resume">Lanjutkan</string>
+    <string name="details_trailer">Trailer</string>
+    <string name="details_add_to_watchlist">Daftar Tonton</string>
+    <string name="details_in_watchlist">Tersimpan</string>
+    <string name="details_episodes">Episode</string>
+    <string name="details_cast">Pemeran &amp; Kru</string>
+    <string name="details_similar">Tontonan Serupa</string>
+    <string name="details_overview">Sinopsis</string>
+
+    <!-- Beranda -->
+    <string name="home_continue_watching">Lanjutkan Menonton</string>
+    <string name="home_trending">Sedang Tren</string>
+    <string name="home_popular_movies">Film Populer</string>
+    <string name="home_popular_series">Serial Populer</string>
+    <string name="home_top_10">Top 10 Hari Ini</string>
+
+    <!-- Gaya Bilah Navigasi -->
+    <string name="settings_navbar_style_title">Gaya Bilah Navigasi</string>
+    <string name="settings_navbar_style_subtitle">Pilih bilah bawah penuh atau pil kaca melayang</string>
+    <string name="settings_navbar_style_docked">Bilah Bawah Penuh</string>
+    <string name="settings_navbar_style_floating">Pil Kaca Melayang</string>
+
+    <!-- Aksesibilitas -->
+    <string name="settings_section_accessibility">Aksesibilitas</string>
+    <string name="settings_reduce_motion_title">Kurangi Animasi</string>
+    <string name="settings_reduce_motion_subtitle">Minimalkan animasi dan transisi di seluruh aplikasi</string>
+</resources>

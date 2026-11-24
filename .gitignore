@@ -1,0 +1,69 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+keystore.properties
+*.jks
+!app/swaraplay-release.jks
+*.keystore
+*/build
+*.png
+*.jpg
+*.jpeg
+!app/src/main/res/**
+!app/src/main/assets/**
+!app/src/main/ic_launcher-playstore.png
+!screenshots/**
+!App logo/**
+cinemaos_line_*.json
+*.html
+!index.html
+!auth/trakt/index.html
+!privacy/index.html
+*.sqlite
+*.dex
+*.wasm
+dist_apk/
+release_dist/
+scratch/
+tools/
+scripts/
+docs/
+.agent-context/
+.agents/
+.cursorrules
+AI_RULES.md
+GEMINI.md
+CLAUDE.md
+TV_MIGRATION_BLUEPRINT.md
+.kotlin/
+test_eups_repo/
+*.apk
+*.aab
+*.zip
+*.log
+scrapers_dump.json
+androidx/
+euthopiar_icons/
+custom_icons/
+svg icons user inspection/
+build_server/
+backups/
+__pycache__/
+*.py[cod]
+
+Refrence Nuviou/
+Refrence Nuviou/**
+Refrence Nuviou/NuvioMobile/
+Refrence Nuviou/NuvioMobile
