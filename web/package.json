@@ -1,0 +1,12 @@
+{
+  "name": "swaraplay-web",
+  "version": "10.0.0",
+  "description": "SwaraPlay v10.0.0 Cinejoy-Style OLED Web Streaming & EncDecEndpoints Proxy Server (Port 8088)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

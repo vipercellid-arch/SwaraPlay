@@ -1,0 +1,5 @@
+<resources>
+    <color name="oled_black">#000000</color>
+    <color name="swara_white">#E0E0E0</color>
+    <color name="surface_dark">#141416</color>
+</resources>

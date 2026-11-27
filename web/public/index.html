@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SwaraPlay v10.0.0 — Streaming Film, Serial, Drama Asia & Anime</title>
+  <link rel="icon" type="image/png" href="/logo.png" />
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+  <style>
+    :root {
+      --bg: #0A0A0C;
+      --surface: #141418;
+      --surface-2: #1C1C22;
+      --border: rgba(255, 255, 255, 0.10);
+      --text: #FFFFFF;
+      --muted: #A1A1AA;
+      --accent: #FFFFFF;
+      --pink: #E91E63;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    /* Floating Cinejoy OLED Glassmorphism Pill Navbar */
+    header {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(1240px, calc(100% - 28px));
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(16, 16, 20, 0.78);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .brand img {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      object-fit: cover;
+    }
+    .brand span {
+      font-weight: 900;
+      font-size: 17px;
+      letter-spacing: -0.3px;
+    }
+    .nav-tabs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .nav-btn:hover { color: #fff; }
+    .nav-btn.active {
+      background: #fff;
+      color: #000;
+      font-weight: 800;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 12px;
+      width: 220px;
+      transition: border-color 0.2s;
+    }
+    .search-box:focus-within { border-color: rgba(255,255,255,0.45); }
+    .search-box input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 13px;
+      width: 100%;
+    }
+    /* Hero Spotlight */
+    .hero {
+      position: relative;
+      height: clamp(440px, 68vh, 640px);
+      display: flex;
+      align-items: flex-end;
+      padding: 0 clamp(20px, 4vw, 56px) 48px;
+      background-size: cover;
+      background-position: center 22%;
+      transition: background-image 0.5s ease;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(10,10,12,0.92) 0%, rgba(10,10,12,0.45) 55%, rgba(10,10,12,0.18) 100%),
+                  linear-gradient(180deg, rgba(10,10,12,0.35) 0%, rgba(10,10,12,0.15) 45%, #0A0A0C 100%);
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 620px;
+    }
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: #D4D4D8;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .badge {
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .hero h1 {
+      font-size: clamp(28px, 4.4vw, 50px);
+      font-weight: 900;
+      line-height: 1.08;
+      margin-bottom: 12px;
+      letter-spacing: -0.6px;
+    }
+    .hero p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #D4D4D8;
+      margin-bottom: 20px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-primary {
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: 999px;
+      padding: 11px 24px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 11px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    main {
+      padding: 10px clamp(20px, 4vw, 56px) 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-head h2 {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+    }
+    /* Cinejoy Browse by Provider Strip */
+    .provider-strip {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scrollbar-width: none;
+    }
+    .provider-strip::-webkit-scrollbar { display: none; }
+    .provider-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-radius: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: #fff;
+      cursor: pointer;
+      flex-shrink: 0;
+      font-weight: 700;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+    .provider-pill:hover { border-color: rgba(255,255,255,0.35); transform: translateY(-2px); }
+    .provider-pill.active { background: #fff; color: #000; border-color: #fff; }
+    .provider-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 900;
+    }
+    /* Horizontal Poster Shelves */
+    .shelf {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scrollbar-width: none;
+    }
+    .shelf::-webkit-scrollbar { display: none; }
+    .grid-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      width: 156px;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .grid-view .card { width: 100%; }
+    .card:hover { transform: translateY(-4px); }
+    .poster-wrap {
+      position: relative;
+      aspect-ratio: 2/3;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .poster-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .rating-tag {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(10,10,12,0.82);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #FACC15;
+    }
+    .card-title {
+      margin-top: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    /* Player Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .player-modal {
+      width: min(1060px, 100%);
+      max-height: 92vh;
+      overflow-y: auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .modal-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .close-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .video-box {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .video-box video { width: 100%; height: 100%; background: #000; }
+    .status-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.75);
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      padding: 20px;
+    }
+    .server-pills, .ep-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pill {
+      padding: 7px 13px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .pill.active { background: #fff; color: #000; border-color: #fff; }
+    @media (max-width: 720px) {
+      .brand span { display: none; }
+      .search-box { width: 140px; }
+      .card { width: 132px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand" onclick="setTab('home')">
+      <img src="/logo.png" alt="SwaraPlay" />
+      <span>SwaraPlay</span>
+    </div>
+    <nav class="nav-tabs" id="navTabs">
+      <button class="nav-btn active" data-tab="home" onclick="setTab('home')">Beranda</button>
+      <button class="nav-btn" data-tab="movie" onclick="setTab('movie')">Film</button>
+      <button class="nav-btn" data-tab="series" onclick="setTab('series')">Serial</button>
+      <button class="nav-btn" data-tab="anime" onclick="setTab('anime')">Anime</button>
+      <button class="nav-btn" data-tab="mylist" onclick="setTab('mylist')">Daftar Saya</button>
+    </nav>
+    <div class="search-box">
+      <input id="searchInput" type="search" placeholder="Cari judul..." />
+    </div>
+  </header>
+
+  <section class="hero" id="hero">
+    <div class="hero-content">
+      <div class="hero-meta" id="heroMeta"></div>
+      <h1 id="heroTitle">Memuat SwaraPlay...</h1>
+      <p id="heroDesc"></p>
+      <div class="hero-actions">
+        <button class="btn-primary" id="heroPlayBtn">▶ Putar Sekarang</button>
+        <button class="btn-secondary" id="heroListBtn">+ Daftar Saya</button>
+      </div>
+    </div>
+  </section>
+
+  <main id="mainContent"></main>
+
+  <div class="modal-backdrop" id="playerModal">
+    <div class="player-modal">
+      <div class="modal-top">
+        <div>
+          <h3 id="modalTitle" style="font-size:18px;font-weight:800;"></h3>
+          <div id="modalSub" style="font-size:12px;color:#A1A1AA;margin-top:2px;"></div>
+        </div>
+        <button class="close-btn" onclick="closePlayer()">×</button>
+      </div>
+      <div class="video-box">
+        <video id="videoEl" controls playsinline crossorigin="anonymous"></video>
+        <div class="status-overlay" id="playerStatus">Menghubungkan ke server EncDecEndpoints...</div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:#A1A1AA;font-weight:700;margin-bottom:8px;">Server EncDec (Langsung HLS/MP4):</div>
+        <div class="server-pills" id="serverPills"></div>
+      </div>
+      <div id="episodeSection" style="display:none;">
+        <div style="font-size:12px;color:#A1A1AA;font-weight:700;margin-bottom:8px;">Pilih Episode:</div>
+        <div class="ep-pills" id="epPills"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PROVIDERS = [
+      { id: "netflix", name: "Netflix", badge: "N", color: "#E50914" },
+      { id: "prime", name: "Prime Video", badge: "P", color: "#00A8E1" },
+      { id: "disney", name: "Disney+", badge: "D+", color: "#113CCF" },
+      { id: "apple", name: "Apple TV+", badge: "TV+", color: "#FFFFFF" },
+      { id: "hbo", name: "HBO Max", badge: "MAX", color: "#7B2FFF" },
+      { id: "hulu", name: "Hulu", badge: "H", color: "#1CE783" },
+      { id: "crunchyroll", name: "Crunchyroll", badge: "CR", color: "#F47521" },
+      { id: "paramount", name: "Paramount+", badge: "P+", color: "#0064FF" }
+    ];
+
+    let catalog = { movies: [], series: [], action: [], dramas: [], animeTrend: [], animeTop: [] };
+    let activeTab = "home";
+    let activeProvider = PROVIDERS[0];
+    let myList = JSON.parse(localStorage.getItem("swaraplay_mylist") || "[]");
+    let hlsInstance = null;
+    let currentServers = [];
+    let currentServerIdx = 0;
+    let currentItem = null;
+    let currentSeason = 1;
+    let currentEpisode = 1;
+
+    function saveMyList() {
+      localStorage.setItem("swaraplay_mylist", JSON.stringify(myList));
+    }
+    function toggleMyList(item) {
+      const idx = myList.findIndex((x) => x.id === item.id);
+      if (idx >= 0) myList.splice(idx, 1);
+      else myList.unshift(item);
+      saveMyList();
+      if (activeTab === "mylist") renderMain();
+    }
+
+    function rotate(arr, offset) {
+      if (!arr || arr.length <= 1) return arr || [];
+      const s = offset % arr.length;
+      return arr.slice(s).concat(arr.slice(0, s));
+    }
+
+    function setHero(item) {
+      if (!item) return;
+      document.getElementById("hero").style.backgroundImage = `url('${item.backdrop || item.poster}')`;
+      document.getElementById("heroTitle").textContent = item.title;
+      document.getElementById("heroDesc").textContent = item.overview || "Streaming langsung Native HLS bertenaga EncDecEndpoints.";
+      document.getElementById("heroMeta").innerHTML = `
+        <span class="badge">${item.category}</span>
+        ${item.year ? `<span>${item.year}</span>` : ""}
+        ${item.rating ? `<span style="color:#FACC15">★ ${item.rating}</span>` : ""}
+        <span class="badge">EncDec Native</span>
+      `;
+      document.getElementById("heroPlayBtn").onclick = () => openPlayer(item, 1, 1);
+      document.getElementById("heroListBtn").onclick = () => {
+        toggleMyList(item);
+        document.getElementById("heroListBtn").textContent = myList.some((x) => x.id === item.id) ? "✓ Tersimpan" : "+ Daftar Saya";
+      };
+    }
+
+    function cardHtml(item) {
+      const safeData = encodeURIComponent(JSON.stringify(item));
+      return `
+        <div class="card" onclick="openPlayerFromEncoded('${safeData}')">
+          <div class="poster-wrap">
+            <img loading="lazy" src="${item.poster}" alt="${item.title.replace(/"/g, "&quot;")}" />
+            ${item.rating ? `<span class="rating-tag">★ ${item.rating}</span>` : ""}
+          </div>
+          <div class="card-title">${item.title}</div>
+          <div class="card-sub">${item.year || ""} • ${item.category}</div>
+        </div>
+      `;
+    }
+
+    window.openPlayerFromEncoded = (enc) => {
+      const item = JSON.parse(decodeURIComponent(enc));
+      openPlayer(item, 1, 1);
+    };
+
+    function shelfHtml(title, items) {
+      if (!items || !items.length) return "";
+      return `
+        <section>
+          <div class="section-head"><h2>${title}</h2></div>
+          <div class="shelf">${items.slice(0, 20).map(cardHtml).join("")}</div>
+        </section>
+      `;
+    }
+
+    function renderMain(searchResults = null) {
+      const main = document.getElementById("mainContent");
+      if (searchResults) {
+        main.innerHTML = `
+          <section>
+            <div class="section-head"><h2>Hasil Pencarian (${searchResults.length})</h2></div>
+            <div class="grid-view">${searchResults.map(cardHtml).join("") || '<p style="color:#A1A1AA">Tidak ada judul ditemukan.</p>'}</div>
+          </section>
+        `;
+        return;
+      }
+      if (activeTab === "movie") {
+        main.innerHTML = `<section><div class="section-head"><h2>Semua Film Populer</h2></div><div class="grid-view">${catalog.movies.concat(catalog.action).map(cardHtml).join("")}</div></section>`;
+        return;
+      }
+      if (activeTab === "series") {
+        main.innerHTML = `<section><div class="section-head"><h2>Serial TV & Drama Asia</h2></div><div class="grid-view">${catalog.series.concat(catalog.dramas).map(cardHtml).join("")}</div></section>`;
+        return;
+      }
+      if (activeTab === "anime") {
+        main.innerHTML = `<section><div class="section-head"><h2>Anime Populer & Rating Tertinggi</h2></div><div class="grid-view">${catalog.animeTrend.concat(catalog.animeTop).map(cardHtml).join("")}</div></section>`;
+        return;
+      }
+      if (activeTab === "mylist") {
+        main.innerHTML = `<section><div class="section-head"><h2>Daftar Saya (${myList.length})</h2></div><div class="grid-view">${myList.map(cardHtml).join("") || '<p style="color:#A1A1AA">Belum ada tontonan tersimpan.</p>'}</div></section>`;
+        return;
+      }
+
+      const pIdx = PROVIDERS.findIndex((p) => p.id === activeProvider.id);
+      const provMovies = activeProvider.id === "crunchyroll" ? catalog.animeTrend : rotate(catalog.movies, pIdx * 4);
+      const provSeries = activeProvider.id === "crunchyroll" ? catalog.animeTop : activeProvider.id === "netflix" ? catalog.dramas.concat(catalog.series) : rotate(catalog.series, pIdx * 3);
+      const awardMovies = [...catalog.movies].sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
+      const topSeries = [...catalog.series, ...catalog.dramas].sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
+
+      const providerStrip = `
+        <section>
+          <div class="section-head"><h2>Jelajahi per Platform</h2></div>
+          <div class="provider-strip">
+            ${PROVIDERS.map((p) => `
+              <button class="provider-pill ${p.id === activeProvider.id ? "active" : ""}" onclick="selectProvider('${p.id}')">
+                <span class="provider-icon" style="background:${p.id === activeProvider.id ? "#000" : p.color + "33"};color:${p.id === activeProvider.id ? "#fff" : p.color}">${p.badge}</span>
+                <span>${p.name}</span>
+              </button>
+            `).join("")}
+          </div>
+        </section>
+      `;
+
+      main.innerHTML =
+        providerStrip +
+        shelfHtml("Serial Trending", catalog.series) +
+        shelfHtml(`Film di ${activeProvider.name}`, provMovies) +
+        shelfHtml(`Serial di ${activeProvider.name}`, provSeries) +
+        shelfHtml("Film Peraih Penghargaan", awardMovies) +
+        shelfHtml("Serial Rating Tertinggi", topSeries) +
+        shelfHtml("Drama Asia Populer", catalog.dramas) +
+        shelfHtml("Anime Populer", catalog.animeTrend);
+    }
+
+    window.setTab = (tab) => {
+      activeTab = tab;
+      document.querySelectorAll(".nav-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+      renderMain();
+    };
+    window.selectProvider = (id) => {
+      activeProvider = PROVIDERS.find((p) => p.id === id) || PROVIDERS[0];
+      renderMain();
+    };
+
+    function playServerIndex(idx) {
+      const srv = currentServers[idx];
+      const video = document.getElementById("videoEl");
+      const status = document.getElementById("playerStatus");
+      if (!srv) {
+        status.style.display = "flex";
+        status.textContent = "Semua server EncDec gagal memutar aliran ini. Coba lagi atau pilih episode lain.";
+        return;
+      }
+      currentServerIdx = idx;
+      document.querySelectorAll("#serverPills .pill").forEach((el, i) => el.classList.toggle("active", i === idx));
+      status.style.display = "flex";
+      status.textContent = `Memuat ${srv.name} (${srv.quality})...`;
+
+      if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+      video.innerHTML = "";
+      if (srv.subtitleUrl) {
+        const track = document.createElement("track");
+        track.kind = "subtitles";
+        track.label = "Indonesia";
+        track.srclang = "id";
+        track.src = srv.subtitleUrl;
+        track.default = true;
+        video.appendChild(track);
+      }
+
+      const srcUrl = srv.proxyUrl;
+      if (window.Hls && Hls.isSupported() && (srv.streamUrl.includes(".m3u8") || !srv.streamUrl.includes(".mp4"))) {
+        hlsInstance = new Hls({ maxBufferLength: 30 });
+        hlsInstance.loadSource(srcUrl);
+        hlsInstance.attachMedia(video);
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+          status.style.display = "none";
+          video.play().catch(() => {});
+        });
+        hlsInstance.on(Hls.Events.ERROR, (_, data) => {
+          if (data.fatal && currentServerIdx + 1 < currentServers.length) {
+            playServerIndex(currentServerIdx + 1);
+          }
+        });
+      } else {
+        video.src = srcUrl;
+        video.oncanplay = () => { status.style.display = "none"; video.play().catch(() => {}); };
+        video.onerror = () => {
+          if (currentServerIdx + 1 < currentServers.length) playServerIndex(currentServerIdx + 1);
+        };
+      }
+    }
+
+    async function openPlayer(item, season = 1, episode = 1) {
+      currentItem = item;
+      currentSeason = season;
+      currentEpisode = episode;
+      document.getElementById("playerModal").classList.add("open");
+      document.getElementById("modalTitle").textContent = item.title;
+      document.getElementById("modalSub").textContent = item.category === "MOVIE" ? `Film • ${item.year}` : `Musim ${season} • Episode ${episode}`;
+      document.getElementById("serverPills").innerHTML = "";
+      document.getElementById("playerStatus").style.display = "flex";
+      document.getElementById("playerStatus").textContent = "Mencari server EncDecEndpoints tercepat...";
+
+      if (item.category !== "MOVIE") {
+        fetch(`/api/detail?id=${encodeURIComponent(item.id)}&category=${item.category}&totalEpisodes=${item.totalEpisodes || 12}`)
+          .then((r) => r.json())
+          .then((det) => {
+            const eps = det.episodes || [];
+            const sec = document.getElementById("episodeSection");
+            const box = document.getElementById("epPills");
+            if (eps.length) {
+              sec.style.display = "block";
+              box.innerHTML = eps.slice(0, 50).map((e) => `
+                <button class="pill ${e.season === season && e.episode === episode ? "active" : ""}" onclick="switchEpisode(${e.season}, ${e.episode})">
+                  S${e.season} E${e.episode}
+                </button>
+              `).join("");
+            } else {
+              sec.style.display = "none";
+            }
+          }).catch(() => {});
+      } else {
+        document.getElementById("episodeSection").style.display = "none";
+      }
+
+      const qs = new URLSearchParams({
+        category: item.category,
+        title: item.title,
+        year: item.year || "2024",
+        imdbId: item.imdbId || "",
+        aniListId: item.aniListId || "",
+        malId: item.malId || "",
+        season: String(season),
+        episode: String(episode),
+      });
+      try {
+        const res = await fetch(`/api/resolve?${qs.toString()}`);
+        const data = await res.json();
+        currentServers = data.servers || [];
+        if (!currentServers.length) {
+          document.getElementById("playerStatus").textContent = "Belum ada aliran langsung yang merespons untuk judul ini. Coba judul/episode lain.";
+          return;
+        }
+        document.getElementById("serverPills").innerHTML = currentServers
+          .map((s, i) => `<button class="pill ${i === 0 ? "active" : ""}" onclick="playServerIndex(${i})">${s.name} • ${s.quality}</button>`)
+          .join("");
+        playServerIndex(0);
+      } catch (e) {
+        document.getElementById("playerStatus").textContent = "Gagal menghubungi server EncDecEndpoints.";
+      }
+    }
+
+    window.switchEpisode = (s, e) => { if (currentItem) openPlayer(currentItem, s, e); };
+    window.closePlayer = () => {
+      document.getElementById("playerModal").classList.remove("open");
+      const v = document.getElementById("videoEl");
+      v.pause();
+      v.src = "";
+      if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+    };
+
+    let searchTimer = null;
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      clearTimeout(searchTimer);
+      const q = e.target.value.trim();
+      if (!q) return renderMain();
+      searchTimer = setTimeout(async () => {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        renderMain(data.results || []);
+      }, 350);
+    });
+
+    (async function init() {
+      try {
+        const res = await fetch("/api/catalog/home");
+        catalog = await res.json();
+        setHero(catalog.series[0] || catalog.movies[0]);
+        renderMain();
+      } catch (e) {
+        document.getElementById("heroTitle").textContent = "Gagal memuat katalog";
+      }
+    })();
+  </script>
+</body>
+</html>
