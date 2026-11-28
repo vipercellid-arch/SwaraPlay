@@ -1,0 +1,12 @@
+{
+  "name": "swaraplay-web",
+  "version": "11.3.0",
+  "description": "SwaraPlay v11.3.0 \u2014 Cinejoy-Grade Frosted Glass UI, Fullscreen Player & Settings, Anti-Overlap Custom Subtitles, 17 Providers & 100% EncDecEndpoints (Port 8088)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
