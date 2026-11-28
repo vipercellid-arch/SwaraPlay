@@ -1,0 +1,8 @@
+<resources>
+    <style name="Theme.SwaraPlay" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/oled_black</item>
+        <item name="android:statusBarColor">@color/oled_black</item>
+        <item name="android:navigationBarColor">@color/oled_black</item>
+        <item name="android:colorPrimary">@color/swara_white</item>
+    </style>
+</resources>

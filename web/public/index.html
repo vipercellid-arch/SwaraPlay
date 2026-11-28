@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0A0A0C" />
+  <title>SwaraPlay — Streaming Film, Serial, Drama Asia & Anime</title>
+  <link rel="icon" type="image/png" href="/logo.png" />
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+  <style>
+    :root {
+      --bg: #0A0A0C;
+      --surface: rgba(20, 20, 26, 0.72);
+      --surface2: rgba(28, 28, 36, 0.85);
+      --glass: rgba(18, 18, 24, 0.58);
+      --glass-strong: rgba(14, 14, 20, 0.82);
+      --glass-border: rgba(255, 255, 255, 0.14);
+      --text: #FFFFFF;
+      --muted: #A1A1AA;
+      --accent: #FFFFFF;
+      --accent-ink: #0A0A0C;
+      --gold: #F5C518;
+      --sub-font: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+      --sub-size: 100%;
+      --sub-color: #FFFFFF;
+      --sub-bg: rgba(10, 10, 14, 0.62);
+    }
+    body[data-theme="midnight"] { --bg: #070B14; --glass: rgba(12, 18, 34, 0.62); --surface: rgba(15, 22, 40, 0.76); }
+    body[data-theme="amethyst"] { --bg: #0D0914; --glass: rgba(24, 15, 38, 0.62); --surface: rgba(28, 18, 44, 0.76); }
+    body[data-theme="emerald"]  { --bg: #07100D; --glass: rgba(12, 28, 22, 0.62); --surface: rgba(15, 34, 27, 0.76); }
+    body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after { transition: none !important; animation: none !important; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; min-height: 100vh; overflow-x: hidden; }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+
+    /* Frosted Glass Utility */
+    .glass {
+      background: var(--glass);
+      backdrop-filter: blur(22px) saturate(165%);
+      -webkit-backdrop-filter: blur(22px) saturate(165%);
+      border: 1px solid var(--glass-border);
+    }
+
+    /* ===== TOP HEADER (DESKTOP & MOBILE — ZERO BOTTOM NAV!) ===== */
+    .topbar-wrap {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+      padding: max(10px, env(safe-area-inset-top)) 14px 8px;
+      pointer-events: none;
+    }
+    .topbar-wrap.hidden-nav { display: none; }
+    .topbar {
+      pointer-events: auto;
+      width: min(1340px, 100%); margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 9px 14px; border-radius: 999px;
+      background: var(--glass-strong); backdrop-filter: blur(24px) saturate(170%); -webkit-backdrop-filter: blur(24px) saturate(170%);
+      border: 1px solid var(--glass-border); box-shadow: 0 12px 36px rgba(0,0,0,0.48);
+    }
+    .brand { display: flex; align-items: center; gap: 9px; font-weight: 800; font-size: 16.5px; letter-spacing: -0.02em; cursor: pointer; flex-shrink: 0; }
+    .brand img { width: 28px; height: 28px; border-radius: 8px; object-fit: cover; }
+
+    .nav-tabs { display: flex; align-items: center; gap: 4px; }
+    .nav-btn {
+      padding: 8px 14px; border-radius: 999px; font-size: 13.5px; font-weight: 600;
+      color: var(--muted); transition: all 0.18s ease; white-space: nowrap;
+    }
+    .nav-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
+    .nav-btn.active { background: var(--accent); color: var(--accent-ink); }
+
+    .top-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .search-form {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 999px; padding: 4px 5px 4px 14px; width: 240px; transition: border-color 0.2s;
+    }
+    .search-form:focus-within { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.12); }
+    .search-form input { width: 100%; min-width: 0; background: none; border: none; outline: none; color: #fff; font-size: 13.5px; }
+    .search-form input::placeholder { color: #8A8A95; }
+    .search-submit-btn {
+      padding: 6px 12px; border-radius: 999px; background: #fff; color: #0A0A0C;
+      font-size: 12px; font-weight: 800; flex-shrink: 0;
+    }
+    .gear-btn {
+      width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.09); border: 1px solid var(--glass-border); color: #fff; flex-shrink: 0;
+      transition: background 0.16s, transform 0.2s;
+    }
+    .gear-btn:hover { background: rgba(255,255,255,0.2); transform: rotate(22deg); }
+
+    /* Mobile Sub-Tabs Bar (clean horizontal strip right under top header — NO bottom nav!) */
+    .mobile-cat-strip {
+      display: none; pointer-events: auto;
+      width: 100%; margin: 8px auto 0; padding: 6px 8px; border-radius: 999px;
+      background: rgba(14, 14, 20, 0.78); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      overflow-x: auto; scrollbar-width: none; gap: 4px;
+    }
+    .mobile-cat-strip::-webkit-scrollbar { display: none; }
+    .mobile-cat-strip .nav-btn { padding: 6px 12px; font-size: 12.5px; flex-shrink: 0; }
+
+    /* ===== HERO AUTO-CAROUSEL ===== */
+    .hero {
+      position: relative; width: 100%; min-height: 74vh; display: flex; align-items: flex-end;
+      padding: 124px 4% 52px; background-size: cover; background-position: center 22%;
+      overflow: hidden; transition: background-image 0.6s ease;
+    }
+    .hero::before {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(10,10,12,0.94) 0%, rgba(10,10,12,0.58) 52%, rgba(10,10,12,0.18) 100%),
+                  linear-gradient(0deg, var(--bg) 0%, rgba(10,10,12,0.28) 46%, rgba(10,10,12,0.52) 100%);
+    }
+    .hero-content { position: relative; z-index: 2; max-width: 620px; }
+    .hero-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; font-size: 12.5px; color: #D4D4D8; font-weight: 600; }
+    .badge { padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.14); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.16); font-size: 11px; font-weight: 700; }
+    .hero h1 { font-size: clamp(26px, 4.6vw, 52px); font-weight: 900; line-height: 1.08; letter-spacing: -0.025em; margin-bottom: 12px; }
+    .hero p { font-size: 14.5px; line-height: 1.55; color: #D4D4D8; margin-bottom: 22px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 999px;
+      background: #fff; color: #0A0A0C; font-weight: 800; font-size: 14px; transition: transform 0.15s;
+    }
+    .btn-primary:hover { transform: scale(1.03); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px;
+      background: rgba(255,255,255,0.12); border: 1px solid var(--glass-border); color: #fff;
+      font-weight: 700; font-size: 14px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      transition: background 0.15s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.22); }
+
+    .hero-controls {
+      position: absolute; right: 4%; bottom: 26px; z-index: 4;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .hero-arrow {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--glass); backdrop-filter: blur(14px); border: 1px solid var(--glass-border);
+      color: #fff; font-size: 17px; display: flex; align-items: center; justify-content: center;
+    }
+    .hero-dots { display: flex; align-items: center; gap: 6px; }
+    .hero-dot { width: 7px; height: 7px; border-radius: 999px; background: rgba(255,255,255,0.34); transition: all 0.25s; cursor: pointer; }
+    .hero-dot.active { width: 22px; background: #fff; }
+
+    /* ===== MAIN CATALOG ===== */
+    main { padding: 14px 4% 64px; max-width: 1480px; margin: 0 auto; }
+    .section { margin-bottom: 34px; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
+    .section-head h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.015em; }
+    .section-sub { font-size: 12.5px; color: var(--muted); }
+
+    .filter-strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 14px; scrollbar-width: none; }
+    .filter-strip::-webkit-scrollbar { display: none; }
+    .chip {
+      padding: 8px 15px; border-radius: 999px; background: var(--glass); backdrop-filter: blur(14px);
+      border: 1px solid var(--glass-border); color: var(--muted); font-size: 13px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
+    }
+    .chip.active { background: #fff; color: #0A0A0C; border-color: #fff; }
+
+    .shelf { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; scroll-snap-type: x proximity; }
+    .shelf::-webkit-scrollbar { display: none; }
+    .shelf .card { width: 162px; flex-shrink: 0; scroll-snap-align: start; }
+    .grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); gap: 18px 14px; }
+
+    .card { cursor: pointer; transition: transform 0.2s ease; }
+    .card:hover { transform: translateY(-4px); }
+    .poster-wrap {
+      position: relative; width: 100%; aspect-ratio: 2 / 3; border-radius: 13px;
+      overflow: hidden; background: var(--surface2); border: 1px solid rgba(255,255,255,0.08);
+    }
+    .poster-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.25s; }
+    .card:hover .poster-wrap img { transform: scale(1.04); }
+    .rating-tag {
+      position: absolute; top: 8px; right: 8px; padding: 3px 7px; border-radius: 8px;
+      background: rgba(10,10,14,0.78); backdrop-filter: blur(10px);
+      font-size: 11px; font-weight: 800; color: var(--gold); border: 1px solid rgba(255,255,255,0.12);
+    }
+    .card-title { margin-top: 8px; font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-sub { margin-top: 2px; font-size: 11.5px; color: var(--muted); }
+
+    .load-more-wrap { display: flex; justify-content: center; margin-top: 26px; }
+    .btn-load-more {
+      padding: 12px 28px; border-radius: 999px; background: var(--glass); backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border); color: #fff; font-weight: 700; font-size: 13.5px;
+    }
+    .btn-load-more:hover { background: #fff; color: #0A0A0C; }
+
+    /* ===== FULL-PAGE DETAIL VIEW (CINEJOY FROSTED GLASS) ===== */
+    #detailView, #settingsView { display: none; min-height: 100vh; background: var(--bg); padding-bottom: 64px; }
+    #detailView.active, #settingsView.active { display: block; }
+    .detail-hero {
+      position: relative; width: 100%; min-height: 68vh; display: flex; flex-direction: column; justify-content: space-between;
+      padding: max(18px, env(safe-area-inset-top)) 4% 38px; background-size: cover; background-position: center 20%;
+    }
+    .detail-hero::before {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(10,10,12,0.94) 0%, rgba(10,10,12,0.52) 55%, rgba(10,10,12,0.22) 100%),
+                  linear-gradient(0deg, var(--bg) 0%, rgba(10,10,12,0.35) 50%, rgba(10,10,12,0.55) 100%);
+    }
+    .detail-top-bar { position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; }
+    .back-pill {
+      display: inline-flex; align-items: center; gap: 10px; padding: 9px 16px; border-radius: 999px;
+      background: var(--glass); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid var(--glass-border); font-weight: 700; font-size: 13.5px;
+    }
+    .back-pill:hover { background: rgba(255,255,255,0.2); }
+
+    .detail-hero-body {
+      position: relative; z-index: 3; display: flex; align-items: flex-end; justify-content: space-between;
+      gap: 28px; margin-top: 110px; flex-wrap: wrap;
+    }
+    .detail-main-col { max-width: 660px; flex: 1; min-width: 260px; }
+    .detail-title { font-size: clamp(28px, 5vw, 54px); font-weight: 900; line-height: 1.06; letter-spacing: -0.025em; margin-bottom: 10px; }
+    .detail-genres { font-size: 14px; color: #D4D4D8; font-weight: 600; margin-bottom: 20px; }
+
+    .detail-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+    .detail-play-btn {
+      display: inline-flex; align-items: center; gap: 9px; padding: 13px 30px; border-radius: 999px;
+      background: #fff; color: #0A0A0C; font-weight: 800; font-size: 15px;
+    }
+    .icon-circle-btn {
+      width: 46px; height: 46px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+      background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--glass-border); font-size: 18px;
+    }
+    .icon-circle-btn:hover, .icon-circle-btn.saved { background: #fff; color: #0A0A0C; }
+
+    .detail-meta-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 13px; color: #D4D4D8; margin-bottom: 8px; }
+    .meta-box { padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.25); font-size: 11px; font-weight: 700; }
+    .detail-directors { font-size: 13px; color: var(--muted); }
+
+    .detail-info-card {
+      width: 280px; padding: 16px 18px; border-radius: 18px;
+      background: var(--glass); backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%);
+      border: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 10px;
+    }
+    .info-row { display: flex; justify-content: space-between; font-size: 12.5px; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px; }
+    .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .info-row span:first-child { color: var(--muted); }
+    .info-row span:last-child { font-weight: 700; text-align: right; }
+
+    .detail-body { padding: 12px 4% 40px; max-width: 1440px; margin: 0 auto; }
+    .detail-synopsis { max-width: 780px; font-size: 14.5px; line-height: 1.65; color: #D4D4D8; margin-bottom: 28px; }
+    .detail-section-title { font-size: 19px; font-weight: 800; margin: 28px 0 14px; }
+
+    .cast-row { display: flex; gap: 18px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+    .cast-row::-webkit-scrollbar { display: none; }
+    .cast-item { width: 92px; flex-shrink: 0; text-align: center; }
+    .cast-avatar {
+      width: 76px; height: 76px; border-radius: 50%; margin: 0 auto 8px; overflow: hidden;
+      background: var(--surface2); border: 1px solid var(--glass-border);
+      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 19px; color: #A1A1AA;
+    }
+    .cast-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .cast-name { font-size: 12.5px; font-weight: 700; line-height: 1.25; }
+    .cast-role { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .season-tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 14px; scrollbar-width: none; }
+    .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); gap: 10px; }
+    .ep-grid.list-style { grid-template-columns: 1fr; max-width: 720px; }
+    .ep-card {
+      padding: 12px 14px; border-radius: 13px; background: var(--glass); backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border); text-align: left; transition: all 0.16s;
+    }
+    .ep-card:hover { background: #fff; color: #0A0A0C; border-color: #fff; }
+    .ep-card .ep-num { font-size: 11.5px; font-weight: 800; opacity: 0.72; }
+    .ep-card .ep-title { font-size: 13px; font-weight: 700; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .trailer-box { max-width: 500px; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #141418; border: 1px solid var(--glass-border); }
+    .trailer-box iframe { width: 100%; height: 100%; border: none; }
+
+    /* ===== FULL-PAGE SETTINGS VIEW (CINEJOY FROSTED GLASS) ===== */
+    .settings-wrap { max-width: 920px; margin: 0 auto; padding: max(20px, env(safe-area-inset-top)) 16px 64px; }
+    .settings-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; gap: 12px; }
+    .settings-header h1 { font-size: 26px; font-weight: 900; }
+    .settings-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 16px; scrollbar-width: none; }
+    .settings-card {
+      border-radius: 20px; padding: 20px; margin-bottom: 18px;
+      background: var(--glass); backdrop-filter: blur(24px) saturate(165%); -webkit-backdrop-filter: blur(24px) saturate(165%);
+      border: 1px solid var(--glass-border);
+    }
+    .settings-card h3 { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
+    .settings-card .sub { font-size: 12.5px; color: var(--muted); margin-bottom: 16px; }
+    .set-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 13px 0; border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .set-row:first-of-type { border-top: none; }
+    .set-label { font-size: 14px; font-weight: 700; }
+    .set-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .switch {
+      position: relative; width: 46px; height: 26px; border-radius: 999px;
+      background: rgba(255,255,255,0.16); border: 1px solid var(--glass-border); flex-shrink: 0; transition: background 0.2s;
+    }
+    .switch::after {
+      content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+      border-radius: 50%; background: #fff; transition: transform 0.2s;
+    }
+    .switch.on { background: #fff; }
+    .switch.on::after { transform: translateX(20px); background: #0A0A0C; }
+
+    .seg-group { display: flex; flex-wrap: wrap; gap: 6px; }
+    .seg-btn {
+      padding: 7px 13px; border-radius: 999px; font-size: 12.5px; font-weight: 700;
+      background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: #D4D4D8;
+    }
+    .seg-btn.active { background: #fff; color: #0A0A0C; border-color: #fff; }
+
+    .sub-preview-box {
+      margin-top: 14px; padding: 24px 16px; border-radius: 14px; text-align: center;
+      background: linear-gradient(135deg, #1b1e2b, #0e1017); border: 1px solid var(--glass-border);
+    }
+    .sub-preview-text {
+      display: inline-block; padding: 6px 14px; border-radius: 8px;
+      font-family: var(--sub-font); font-size: var(--sub-size); color: var(--sub-color);
+      background: var(--sub-bg); backdrop-filter: blur(8px); font-weight: 600;
+    }
+    .order-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08); margin-bottom: 8px; font-size: 13.5px; font-weight: 700;
+    }
+    .order-btns { display: flex; gap: 6px; }
+    .order-btns button { width: 30px; height: 30px; border-radius: 8px; background: rgba(255,255,255,0.12); font-weight: 800; }
+
+    /* ===== FULLSCREEN CINEMA PLAYER (LANDSCAPE & EASY EXIT ON MOBILE!) ===== */
+    #watchView {
+      display: none; position: fixed; inset: 0; z-index: 200; background: #000000;
+      flex-direction: column; justify-content: center; align-items: center; user-select: none;
+      overflow: hidden;
+    }
+    #watchView.active { display: flex; }
+    /* Forced 90deg CSS landscape fallback when mobile browser blocks orientation lock */
+    #watchView.force-landscape {
+      width: 100vh; height: 100vw;
+      top: 50%; left: 50%; right: auto; bottom: auto;
+      transform: translate(-50%, -50%) rotate(90deg);
+    }
+    #watchVideo { width: 100%; height: 100%; object-fit: contain; background: #000; }
+    #watchVideo::cue {
+      font-family: var(--sub-font);
+      color: var(--sub-color);
+      background-color: var(--sub-bg);
+      font-size: var(--sub-size);
+    }
+
+    .player-spinner {
+      position: absolute; width: 46px; height: 46px; border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.18); border-top-color: #fff;
+      animation: spin 0.75s linear infinite; pointer-events: none; z-index: 4; display: none;
+    }
+    .player-spinner.show { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .player-hud {
+      position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; justify-content: space-between;
+      padding: max(16px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+      background: linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 24%, rgba(0,0,0,0) 68%, rgba(0,0,0,0.88) 100%);
+      transition: opacity 0.25s ease;
+    }
+    .player-hud.hide { opacity: 0; pointer-events: none; }
+
+    .hud-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .hud-back-btn {
+      min-width: 48px; height: 48px; padding: 0 14px; border-radius: 999px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      background: rgba(18,18,24,0.68); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--glass-border); color: #fff; font-size: 13.5px; font-weight: 700;
+    }
+    .hud-icon-btn {
+      width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      background: rgba(18,18,24,0.55); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); color: #fff;
+    }
+    .hud-title { font-size: 16px; font-weight: 700; text-align: center; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .hud-center { display: flex; align-items: center; justify-content: center; gap: 44px; }
+    .hud-seek-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; color: #fff; opacity: 0.94; }
+    .hud-play-btn {
+      width: 68px; height: 68px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.14); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.22); color: #fff;
+    }
+
+    .hud-bottom { display: flex; flex-direction: column; gap: 10px; }
+    .seek-row { display: flex; align-items: center; gap: 12px; }
+    .time-label { font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: #E4E4E7; min-width: 44px; }
+    .seek-slider {
+      flex: 1; -webkit-appearance: none; appearance: none; height: 4px; border-radius: 999px;
+      background: rgba(255,255,255,0.3); outline: none; cursor: pointer;
+    }
+    .seek-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%; background: #fff; }
+
+    .hud-actions-bar { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; }
+    .hud-action-item {
+      display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 999px;
+      background: rgba(18,18,24,0.58); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border); font-size: 12.5px; font-weight: 600; color: #F4F4F5;
+    }
+    .hud-action-item:hover { background: rgba(255,255,255,0.2); }
+    .hud-action-item svg { width: 16px; height: 16px; }
+
+    .player-sheet {
+      display: none; position: absolute; right: 20px; bottom: 84px; z-index: 14;
+      width: min(360px, calc(100% - 28px)); max-height: 62vh; overflow-y: auto;
+      background: rgba(14, 14, 20, 0.88); backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%);
+      border: 1px solid var(--glass-border); border-radius: 18px; padding: 14px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.75);
+    }
+    .player-sheet.open { display: block; }
+    .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .sheet-head h4 { font-size: 14px; font-weight: 800; }
+    .sheet-list { display: flex; flex-direction: column; gap: 6px; }
+    .sheet-opt {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; border-radius: 11px; background: rgba(255,255,255,0.06);
+      font-size: 13px; font-weight: 600; text-align: left;
+    }
+    .sheet-opt.active { background: #fff; color: #0A0A0C; }
+
+    .toast {
+      position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); z-index: 300;
+      padding: 10px 18px; border-radius: 999px; background: rgba(18,18,24,0.92); backdrop-filter: blur(18px);
+      border: 1px solid var(--glass-border); font-size: 13px; font-weight: 600; display: none;
+    }
+    .toast.show { display: block; }
+
+    /* ===== MOBILE RESPONSIVE (BERSIH, TANPA NAVIGASI BAWAH, HANYA PENCARIAN DI ATAS!) ===== */
+    @media (max-width: 860px) {
+      .topbar-wrap { padding: max(8px, env(safe-area-inset-top)) 10px 6px; }
+      .topbar { padding: 7px 10px; gap: 8px; border-radius: 18px; }
+      .brand span { display: none; }
+      .nav-tabs { display: none; }
+      .top-right { flex: 1; justify-content: flex-end; }
+      .search-form { flex: 1; width: auto; max-width: none; padding: 3px 4px 3px 12px; }
+      .search-form input { font-size: 13px; }
+      .search-submit-btn { padding: 6px 10px; font-size: 11.5px; }
+      .gear-btn { width: 34px; height: 34px; }
+      .mobile-cat-strip { display: flex; }
+
+      .hero { min-height: 58vh; padding: 136px 14px 48px; }
+      .hero h1 { font-size: 26px; }
+      .hero p { font-size: 13px; -webkit-line-clamp: 2; margin-bottom: 16px; }
+      .hero-controls { right: 14px; bottom: 14px; gap: 6px; }
+      .hero-arrow { width: 28px; height: 28px; font-size: 14px; }
+      .btn-primary, .btn-secondary { padding: 10px 16px; font-size: 13px; }
+
+      main { padding: 10px 12px 48px; }
+      .section-head h2 { font-size: 17px; }
+      .shelf { gap: 10px; }
+      .shelf .card { width: 122px; }
+      .grid-view { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 9px; }
+      .card-title { font-size: 12px; }
+      .card-sub { font-size: 10.5px; }
+
+      .detail-hero { min-height: 54vh; padding: max(14px, env(safe-area-inset-top)) 14px 24px; }
+      .detail-hero-body { margin-top: 68px; gap: 16px; }
+      .detail-title { font-size: 26px; }
+      .detail-info-card { width: 100%; }
+      .detail-body { padding: 8px 14px 56px; }
+      .ep-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+      .hud-center { gap: 28px; }
+      .hud-actions-bar { gap: 6px; }
+      .hud-action-item { padding: 6px 10px; font-size: 11.5px; }
+      .player-sheet { right: 12px; left: 12px; width: auto; bottom: 72px; }
+    }
+    @media (max-width: 360px) {
+      .grid-view { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP HEADER (DESKTOP & MOBILE: HANYA PENCARIAN DI ATAS + PENGATURAN, ZERO NAVIGASI BAWAH!) -->
+  <div class="topbar-wrap" id="topBar">
+    <header class="topbar">
+      <div class="brand" onclick="goHome()">
+        <img src="/logo.png" alt="SwaraPlay" />
+        <span>SwaraPlay</span>
+      </div>
+      <nav class="nav-tabs" id="desktopNav">
+        <button class="nav-btn active" data-tab="home" onclick="setTab('home')">Beranda</button>
+        <button class="nav-btn" data-tab="movie" onclick="setTab('movie')">Film</button>
+        <button class="nav-btn" data-tab="series" onclick="setTab('series')">Serial TV</button>
+        <button class="nav-btn" data-tab="drama" onclick="setTab('drama')">Drama Asia</button>
+        <button class="nav-btn" data-tab="anime" onclick="setTab('anime')">Anime</button>
+        <button class="nav-btn" data-tab="mylist" onclick="setTab('mylist')">Daftar Saya</button>
+      </nav>
+      <div class="top-right">
+        <form class="search-form" id="searchForm">
+          <input id="searchInput" type="search" placeholder="Cari film, serial, anime..." autocomplete="off" />
+          <button type="submit" class="search-submit-btn">Cari</button>
+        </form>
+        <button class="gear-btn" onclick="openSettings()" aria-label="Pengaturan" title="Pengaturan">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        </button>
+      </div>
+    </header>
+    <div class="mobile-cat-strip" id="mobileCatStrip">
+      <button class="nav-btn active" data-tab="home" onclick="setTab('home')">Beranda</button>
+      <button class="nav-btn" data-tab="movie" onclick="setTab('movie')">Film</button>
+      <button class="nav-btn" data-tab="series" onclick="setTab('series')">Serial TV</button>
+      <button class="nav-btn" data-tab="drama" onclick="setTab('drama')">Drama Asia</button>
+      <button class="nav-btn" data-tab="anime" onclick="setTab('anime')">Anime</button>
+      <button class="nav-btn" data-tab="mylist" onclick="setTab('mylist')">Daftar Saya</button>
+    </div>
+  </div>
+
+  <!-- VIEW 1: BROWSE / HOME / CATALOG -->
+  <div id="browseView">
+    <section class="hero" id="hero">
+      <div class="hero-content">
+        <div class="hero-meta" id="heroMeta"></div>
+        <h1 id="heroTitle">SwaraPlay</h1>
+        <p id="heroDesc"></p>
+        <div class="hero-actions">
+          <button class="btn-primary" id="heroPlayBtn">▶ Putar</button>
+          <button class="btn-secondary" id="heroDetailBtn">Detail</button>
+          <button class="btn-secondary" id="heroListBtn">+ Daftar Saya</button>
+        </div>
+      </div>
+      <div class="hero-controls" id="heroControls">
+        <button class="hero-arrow" onclick="stepHero(-1)" aria-label="Sebelumnya">‹</button>
+        <div class="hero-dots" id="heroDots"></div>
+        <button class="hero-arrow" onclick="stepHero(1)" aria-label="Berikutnya">›</button>
+      </div>
+    </section>
+    <main id="mainContent"></main>
+  </div>
+
+  <!-- VIEW 2: FULL-PAGE DETAIL VIEW -->
+  <div id="detailView">
+    <section class="detail-hero" id="detailHero">
+      <div class="detail-top-bar">
+        <button class="back-pill" onclick="closeDetail()">
+          <span>←</span>
+          <img src="/logo.png" alt="SwaraPlay" style="width:22px;height:22px;border-radius:5px;" />
+          <span>Kembali</span>
+        </button>
+        <button class="gear-btn" onclick="openSettings()" aria-label="Pengaturan">⚙</button>
+      </div>
+      <div class="detail-hero-body">
+        <div class="detail-main-col">
+          <h1 class="detail-title" id="detailTitle"></h1>
+          <div class="detail-genres" id="detailGenres"></div>
+          <div class="detail-actions">
+            <button class="detail-play-btn" id="detailPlayBtn">▶ Putar</button>
+            <button class="icon-circle-btn" id="detailSaveBtn" title="Simpan ke Daftar Saya">+</button>
+            <button class="icon-circle-btn" id="detailShareBtn" title="Bagikan">↗</button>
+          </div>
+          <div class="detail-meta-row" id="detailMetaRow"></div>
+          <div class="detail-directors" id="detailDirectors"></div>
+        </div>
+        <div class="detail-info-card" id="detailInfoCard"></div>
+      </div>
+    </section>
+    <div class="detail-body">
+      <p class="detail-synopsis" id="detailSynopsis"></p>
+      <div id="detailEpisodesWrap"></div>
+      <div id="detailCastWrap"></div>
+      <div id="detailTrailerWrap"></div>
+      <div id="detailSimilarWrap"></div>
+    </div>
+  </div>
+
+  <!-- VIEW 3: FULL-PAGE SETTINGS VIEW (CINEJOY FROSTED GLASS) -->
+  <div id="settingsView">
+    <div class="settings-wrap">
+      <div class="settings-header">
+        <button class="back-pill" onclick="closeSettings()">← Kembali</button>
+        <h1>Pengaturan</h1>
+      </div>
+      <div class="settings-tabs">
+        <button class="chip active" data-stab="appearance" onclick="setSettingsTab('appearance')">Tampilan</button>
+        <button class="chip" data-stab="playback" onclick="setSettingsTab('playback')">Pemutaran</button>
+        <button class="chip" data-stab="servers" onclick="setSettingsTab('servers')">Urutan Server</button>
+        <button class="chip" data-stab="subtitles" onclick="setSettingsTab('subtitles')">Subtitle</button>
+      </div>
+      <div id="settingsBody"></div>
+    </div>
+  </div>
+
+  <!-- VIEW 4: FULLSCREEN CINEMA PLAYER (LANDSCAPE & EASY EXIT ON MOBILE!) -->
+  <div id="watchView">
+    <video id="watchVideo" playsinline crossorigin="anonymous"></video>
+    <div class="player-spinner" id="playerSpinner"></div>
+
+    <div class="player-hud" id="playerHud">
+      <div class="hud-top">
+        <button class="hud-back-btn" onclick="closePlayer()" aria-label="Keluar Pemutar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m15 18-6-6 6-6"/></svg>
+          <span>Keluar</span>
+        </button>
+        <div class="hud-title" id="watchTitle"></div>
+        <button class="hud-icon-btn" onclick="toggleMobileLandscape()" aria-label="Putar Layar Landscape" title="Putar Layar Landscape">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M12 2v2M12 20v2"/></svg>
+        </button>
+      </div>
+
+      <div class="hud-center">
+        <button class="hud-seek-btn" onclick="seekBy(-prefs.seekSec)" aria-label="Mundur">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          <span class="seek-sec-label" style="font-size:11px;font-weight:800;">10</span>
+        </button>
+        <button class="hud-play-btn" id="hudPlayPauseBtn" onclick="togglePlayPause()" aria-label="Putar/Jeda">
+          <svg id="playPauseIcon" width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+        </button>
+        <button class="hud-seek-btn" onclick="seekBy(prefs.seekSec)" aria-label="Maju">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+          <span class="seek-sec-label" style="font-size:11px;font-weight:800;">10</span>
+        </button>
+      </div>
+
+      <div class="hud-bottom">
+        <div class="seek-row">
+          <span class="time-label" id="timeCurrent">0:00</span>
+          <input type="range" class="seek-slider" id="seekSlider" min="0" max="100" value="0" step="0.1" />
+          <span class="time-label" id="timeDuration" style="text-align:right;">0:00</span>
+        </div>
+        <div class="hud-actions-bar">
+          <button class="hud-action-item" onclick="togglePiP()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><rect width="7" height="5" x="13" y="12" rx="1"/></svg>
+            <span>PiP</span>
+          </button>
+          <button class="hud-action-item" onclick="toggleSheet('servers')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+            <span>Servers</span>
+          </button>
+          <button class="hud-action-item" onclick="toggleSheet('subtitles')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M7 15h4M15 15h2M7 11h2M13 11h4"/></svg>
+            <span>Subtitles</span>
+          </button>
+          <button class="hud-action-item" id="hudEpisodesBtn" style="display:none;" onclick="toggleSheet('episodes')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+            <span>Episodes</span>
+          </button>
+          <button class="hud-action-item" onclick="toggleSheet('settings')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+            <span>Settings</span>
+          </button>
+          <button class="hud-action-item" onclick="toggleMobileLandscape()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+            <span>Landscape</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="player-sheet" id="playerSheet">
+      <div class="sheet-head">
+        <h4 id="sheetTitle">Servers</h4>
+        <button onclick="closeSheet()" style="font-size:16px;padding:2px 6px;">✕</button>
+      </div>
+      <div class="sheet-list" id="sheetBody"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ===== PREFERENCES (CINEJOY SETTINGS) =====
+    const DEFAULT_PREFS = {
+      theme: "default",
+      episodeStyle: "grid",
+      showTrailers: true,
+      spoilerFree: false,
+      reduceMotion: false,
+      autoplayNext: true,
+      seekSec: 10,
+      autoSubtitles: true,
+      autoLandscapeMobile: true,
+      subFont: "default",
+      subSize: 100,
+      subColor: "#FFFFFF",
+      subBgBlur: true,
+      serverOrder: ["VidLink", "Cinejoy", "Videasy", "Nexa", "MeowTV", "Hexa", "VidFast", "KissKH", "AnimeKai", "MegaPlay"],
+    };
+    let prefs = Object.assign({}, DEFAULT_PREFS, JSON.parse(localStorage.getItem("swaraplay_prefs_v11") || "{}"));
+    function savePrefs() {
+      localStorage.setItem("swaraplay_prefs_v11", JSON.stringify(prefs));
+      applyPrefs();
+    }
+    function applyPrefs() {
+      document.body.dataset.theme = prefs.theme;
+      document.body.classList.toggle("reduce-motion", Boolean(prefs.reduceMotion));
+      const root = document.documentElement.style;
+      const fontMap = {
+        default: '-apple-system, BlinkMacSystemFont, "Inter", sans-serif',
+        netflix: '"Helvetica Neue", Arial, sans-serif',
+        montserrat: '"Montserrat", "Segoe UI", sans-serif',
+        cinema: 'Georgia, serif',
+      };
+      root.setProperty("--sub-font", fontMap[prefs.subFont] || fontMap.default);
+      root.setProperty("--sub-size", `${prefs.subSize}%`);
+      root.setProperty("--sub-color", prefs.subColor);
+      root.setProperty("--sub-bg", prefs.subBgBlur ? "rgba(10, 10, 14, 0.68)" : "transparent");
+      document.querySelectorAll(".seek-sec-label").forEach((el) => { el.textContent = String(prefs.seekSec); });
+    }
+    applyPrefs();
+
+    // ===== STATE =====
+    let catalog = { movies: [], series: [], awardMovies: [], awardSeries: [], action: [], dramas: [], animeTrend: [], animeTop: [] };
+    let activeTab = "home";
+    let settingsTab = "appearance";
+    let myList = JSON.parse(localStorage.getItem("swaraplay_mylist") || "[]");
+    let heroSlides = [];
+    let heroIdx = 0;
+    let heroTimer = null;
+
+    const catState = {
+      movie: { genre: "", page: 1, items: [], hasMore: true },
+      series: { genre: "", page: 1, items: [], hasMore: true },
+      drama: { genre: "", page: 1, items: [], hasMore: true },
+      anime: { genre: "Trending", page: 1, items: [], hasMore: true },
+    };
+    const CATEGORY_FILTERS = {
+      movie: ["Semua", "Action", "Sci-Fi", "Horror", "Comedy", "Animation", "Thriller", "Fantasy", "Romance", "Crime"],
+      series: ["Semua", "Drama", "Action", "Sci-Fi", "Crime", "Comedy", "Animation", "Mystery"],
+      drama: ["Semua", "Korea", "China", "Jepang", "Thailand"],
+      anime: ["Trending", "Populer", "Rating Tertinggi"],
+    };
+
+    const itemStore = new Map();
+    function registerItem(item) {
+      const k = `${item.category}_${item.id}`;
+      itemStore.set(k, item);
+      return k;
+    }
+
+    let currentDetailItem = null;
+    let currentDetailData = null;
+    let currentWatchItem = null;
+    let currentSeason = 1;
+    let currentEpisode = 1;
+    let currentServers = [];
+    let currentSubtitles = [];
+    let currentServerIdx = 0;
+    let activeSubIdx = -1;
+    let hlsInstance = null;
+    let hudTimer = null;
+    let openSheetType = null;
+    let isForcedLandscape = false;
+    const preResolveCache = new Map();
+
+    // ===== UTILS =====
+    function esc(s) {
+      return String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(t._tm);
+      t._tm = setTimeout(() => t.classList.remove("show"), 2400);
+    }
+    function isSaved(item) { return myList.some((x) => x.id === item.id && x.category === item.category); }
+    function toggleSave(item) {
+      if (!item) return;
+      if (isSaved(item)) {
+        myList = myList.filter((x) => !(x.id === item.id && x.category === item.category));
+        showToast("Dihapus dari Daftar Saya");
+      } else {
+        myList.unshift(item);
+        showToast("Disimpan ke Daftar Saya");
+      }
+      localStorage.setItem("swaraplay_mylist", JSON.stringify(myList.slice(0, 120)));
+      if (activeTab === "mylist") renderMain();
+      updateDetailSaveBtn();
+    }
+    function formatTime(sec) {
+      if (!Number.isFinite(sec) || sec < 0) return "0:00";
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = Math.floor(sec % 60);
+      return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`;
+    }
+
+    // ===== HARDWARE BACK BUTTON SUPPORT ON MOBILE =====
+    window.addEventListener("popstate", () => {
+      if (document.getElementById("watchView").classList.contains("active")) {
+        closePlayer(false);
+      } else if (document.getElementById("settingsView").classList.contains("active")) {
+        closeSettings(false);
+      } else if (document.getElementById("detailView").classList.contains("active")) {
+        closeDetail(true, false);
+      }
+    });
+
+    // ===== CARDS & HERO CAROUSEL =====
+    function cardHtml(item) {
+      const key = registerItem(item);
+      const catLabel = item.category === "MOVIE" ? "Film" : item.category === "SERIES" ? "Serial" : item.category === "ASIAN_DRAMA" ? "Drama" : "Anime";
+      return `
+        <div class="card" onclick="openDetailByKey('${esc(key)}')">
+          <div class="poster-wrap">
+            <img loading="lazy" src="${esc(item.poster)}" alt="${esc(item.title)}" onerror="this.src='/logo.png'" />
+            ${item.rating ? `<span class="rating-tag">★ ${esc(item.rating)}</span>` : ""}
+          </div>
+          <div class="card-title">${esc(item.title)}</div>
+          <div class="card-sub">${esc(item.year || "")}${item.year ? " • " : ""}${catLabel}</div>
+        </div>
+      `;
+    }
+    function shelfHtml(title, items) {
+      if (!items || !items.length) return "";
+      return `<section class="section"><div class="section-head"><h2>${esc(title)}</h2></div><div class="shelf">${items.slice(0, 24).map(cardHtml).join("")}</div></section>`;
+    }
+
+    function setHero(item) {
+      if (!item) return;
+      document.getElementById("hero").style.backgroundImage = `url('${item.backdrop || item.poster}')`;
+      document.getElementById("heroMeta").innerHTML = `
+        <span class="badge">${item.category === "MOVIE" ? "FILM" : item.category === "SERIES" ? "SERIAL" : item.category === "ANIME" ? "ANIME" : "DRAMA ASIA"}</span>
+        ${item.year ? `<span>${esc(item.year)}</span>` : ""}
+        ${item.rating ? `<span style="color:var(--gold)">★ ${esc(item.rating)}</span>` : ""}
+        ${(item.genres || []).slice(0, 2).map((g) => `<span>• ${esc(g)}</span>`).join("")}
+      `;
+      document.getElementById("heroTitle").textContent = item.title;
+      document.getElementById("heroDesc").textContent = item.overview || "Streaming kualitas HD dengan subtitle Bahasa Indonesia.";
+      document.getElementById("heroPlayBtn").onclick = () => startWatch(item, 1, 1);
+      document.getElementById("heroDetailBtn").onclick = () => openDetail(item);
+      const listBtn = document.getElementById("heroListBtn");
+      listBtn.textContent = isSaved(item) ? "✓ Tersimpan" : "+ Daftar Saya";
+      listBtn.onclick = () => { toggleSave(item); listBtn.textContent = isSaved(item) ? "✓ Tersimpan" : "+ Daftar Saya"; };
+    }
+    function renderHeroDots() {
+      const el = document.getElementById("heroDots");
+      if (el) el.innerHTML = heroSlides.map((_, i) => `<span class="hero-dot ${i === heroIdx ? "active" : ""}" onclick="goHeroSlide(${i})"></span>`).join("");
+    }
+    window.goHeroSlide = (idx) => {
+      if (!heroSlides.length) return;
+      heroIdx = ((idx % heroSlides.length) + heroSlides.length) % heroSlides.length;
+      setHero(heroSlides[heroIdx]);
+      renderHeroDots();
+      restartHeroTimer();
+    };
+    window.stepHero = (d) => goHeroSlide(heroIdx + d);
+    function restartHeroTimer() {
+      clearInterval(heroTimer);
+      if (heroSlides.length <= 1) return;
+      heroTimer = setInterval(() => {
+        if (activeTab === "home" && !document.getElementById("detailView").classList.contains("active") && !document.getElementById("watchView").classList.contains("active") && !document.getElementById("settingsView").classList.contains("active")) {
+          heroIdx = (heroIdx + 1) % heroSlides.length;
+          setHero(heroSlides[heroIdx]);
+          renderHeroDots();
+        }
+      }, 6000);
+    }
+
+    // ===== NAVIGATION & TABS =====
+    function syncNavActive(tab) {
+      document.querySelectorAll(".nav-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+    }
+    window.goHome = () => setTab("home");
+    window.setTab = async (tab) => {
+      activeTab = tab;
+      closeSettings(false);
+      closeDetail(false, false);
+      document.getElementById("browseView").style.display = "block";
+      document.getElementById("topBar").classList.remove("hidden-nav");
+      syncNavActive(tab);
+      document.getElementById("hero").style.display = tab === "home" ? "flex" : "none";
+      window.scrollTo({ top: 0, behavior: "instant" });
+
+      if (["movie", "series", "drama", "anime"].includes(tab) && !catState[tab].items.length) {
+        if (tab === "movie") catState.movie.items = catalog.movies.slice();
+        if (tab === "series") catState.series.items = catalog.series.slice();
+        if (tab === "drama") catState.drama.items = catalog.dramas.slice();
+        if (tab === "anime") catState.anime.items = catalog.animeTrend.concat(catalog.animeTop);
+      }
+      renderMain();
+    };
+
+    window.selectCategoryFilter = async (cat, filterVal) => {
+      const apiGenre = filterVal === "Semua" ? "" : filterVal;
+      catState[cat].genre = filterVal;
+      catState[cat].page = 1;
+      catState[cat].hasMore = true;
+      document.getElementById("mainContent").innerHTML = `<section class="section" style="padding-top:116px;"><p style="color:var(--muted);">Memuat katalog...</p></section>`;
+      const res = await fetch(`/api/catalog/category?cat=${cat}&genre=${encodeURIComponent(apiGenre)}&page=1`).then((r) => r.json()).catch(() => ({ items: [] }));
+      catState[cat].items = res.items || [];
+      catState[cat].hasMore = Boolean(res.hasMore);
+      renderMain();
+    };
+
+    window.loadMoreCategory = async (cat) => {
+      const st = catState[cat];
+      st.page += 1;
+      const btn = document.getElementById("loadMoreBtn");
+      if (btn) btn.textContent = "Memuat...";
+      const apiGenre = st.genre === "Semua" ? "" : st.genre;
+      const res = await fetch(`/api/catalog/category?cat=${cat}&genre=${encodeURIComponent(apiGenre)}&page=${st.page}`).then((r) => r.json()).catch(() => ({ items: [] }));
+      const newItems = res.items || [];
+      const existingIds = new Set(st.items.map((x) => `${x.category}_${x.id}`));
+      for (const it of newItems) {
+        if (!existingIds.has(`${it.category}_${it.id}`)) st.items.push(it);
+      }
+      st.hasMore = Boolean(res.hasMore && newItems.length > 0);
+      renderMain();
+    };
+
+    function renderMain(searchResults = null, searchQuery = "") {
+      const main = document.getElementById("mainContent");
+      const topPad = window.innerWidth <= 860 ? "118px" : "88px";
+      if (searchResults !== null) {
+        document.getElementById("hero").style.display = "none";
+        main.innerHTML = `
+          <section class="section" style="padding-top:${topPad};">
+            <div class="section-head">
+              <h2>Hasil Pencarian "${esc(searchQuery)}" (${searchResults.length})</h2>
+              <button class="chip" onclick="setTab('home')">Tutup</button>
+            </div>
+            <div class="grid-view">
+              ${searchResults.length ? searchResults.map(cardHtml).join("") : `<p style="color:var(--muted);grid-column:1/-1;">Tidak ada judul ditemukan untuk "${esc(searchQuery)}".</p>`}
+            </div>
+          </section>
+        `;
+        return;
+      }
+
+      if (activeTab === "home") {
+        main.innerHTML =
+          shelfHtml("Film Trending", catalog.movies) +
+          shelfHtml("Serial Trending", catalog.series) +
+          shelfHtml("Drama Asia Populer", catalog.dramas) +
+          shelfHtml("Anime Trending & Populer", catalog.animeTrend) +
+          shelfHtml("Anime Rating Tertinggi", catalog.animeTop) +
+          shelfHtml("Film Peraih Penghargaan", catalog.awardMovies) +
+          shelfHtml("Serial Rating Tertinggi", catalog.awardSeries);
+        return;
+      }
+
+      if (activeTab === "mylist") {
+        main.innerHTML = `
+          <section class="section" style="padding-top:${topPad};">
+            <div class="section-head"><h2>Daftar Saya (${myList.length})</h2></div>
+            <div class="grid-view">
+              ${myList.length ? myList.map(cardHtml).join("") : `<p style="color:var(--muted);grid-column:1/-1;">Belum ada tontonan yang disimpan.</p>`}
+            </div>
+          </section>
+        `;
+        return;
+      }
+
+      const titles = { movie: "Film Populer", series: "Serial TV Populer", drama: "Drama Asia", anime: "Anime Populer & Rating Tertinggi" };
+      const st = catState[activeTab];
+      const filters = CATEGORY_FILTERS[activeTab] || [];
+      const currentFilter = st.genre || filters[0] || "";
+      main.innerHTML = `
+        <section class="section" style="padding-top:${topPad};">
+          <div class="section-head">
+            <h2>${titles[activeTab]}</h2>
+            <span class="section-sub">${st.items.length} judul</span>
+          </div>
+          <div class="filter-strip">
+            ${filters.map((f) => `<button class="chip ${currentFilter === f ? "active" : ""}" onclick="selectCategoryFilter('${activeTab}','${esc(f)}')">${esc(f)}</button>`).join("")}
+          </div>
+          <div class="grid-view">
+            ${st.items.length ? st.items.map(cardHtml).join("") : `<p style="color:var(--muted);grid-column:1/-1;">Memuat katalog...</p>`}
+          </div>
+          ${st.hasMore ? `<div class="load-more-wrap"><button class="btn-load-more" id="loadMoreBtn" onclick="loadMoreCategory('${activeTab}')">Muat Lebih Banyak</button></div>` : ""}
+        </section>
+      `;
+    }
+
+    // ===== INSTANT SEARCH =====
+    document.getElementById("searchForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const q = document.getElementById("searchInput").value.trim();
+      if (!q) return setTab("home");
+      closeSettings(false);
+      closeDetail(false, false);
+      document.getElementById("browseView").style.display = "block";
+      document.getElementById("topBar").classList.remove("hidden-nav");
+      document.getElementById("hero").style.display = "none";
+      const topPad = window.innerWidth <= 860 ? "118px" : "88px";
+      document.getElementById("mainContent").innerHTML = `<section class="section" style="padding-top:${topPad};"><div class="section-head"><h2>Mencari "${esc(q)}"...</h2></div></section>`;
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`).then((r) => r.json());
+        renderMain(res.results || [], q);
+      } catch { renderMain([], q); }
+    });
+
+    // ===== SETTINGS VIEW (CINEJOY FROSTED GLASS) =====
+    window.openSettings = () => {
+      history.pushState({ view: "settings" }, "");
+      document.getElementById("browseView").style.display = "none";
+      document.getElementById("detailView").classList.remove("active");
+      document.getElementById("topBar").classList.add("hidden-nav");
+      document.getElementById("settingsView").classList.add("active");
+      window.scrollTo({ top: 0, behavior: "instant" });
+      renderSettings();
+    };
+    window.closeSettings = (goBack = false) => {
+      document.getElementById("settingsView").classList.remove("active");
+      document.getElementById("browseView").style.display = "block";
+      document.getElementById("topBar").classList.remove("hidden-nav");
+    };
+    window.setSettingsTab = (tab) => {
+      settingsTab = tab;
+      document.querySelectorAll("[data-stab]").forEach((b) => b.classList.toggle("active", b.dataset.stab === tab));
+      renderSettings();
+    };
+    window.togglePref = (k) => { prefs[k] = !prefs[k]; savePrefs(); renderSettings(); };
+    window.setPref = (k, v) => { prefs[k] = v; savePrefs(); renderSettings(); };
+    window.moveServerOrder = (idx, dir) => {
+      const ni = idx + dir;
+      if (ni < 0 || ni >= prefs.serverOrder.length) return;
+      const arr = prefs.serverOrder.slice();
+      [arr[idx], arr[ni]] = [arr[ni], arr[idx]];
+      prefs.serverOrder = arr;
+      savePrefs();
+      renderSettings();
+    };
+
+    function renderSettings() {
+      const body = document.getElementById("settingsBody");
+      if (settingsTab === "appearance") {
+        body.innerHTML = `
+          <div class="settings-card">
+            <h3>Tampilan</h3>
+            <p class="sub">Sesuaikan palet warna OLED, tampilan episode, dan animasi antarmuka.</p>
+            <div class="set-row">
+              <div><div class="set-label">Tema Warna</div><div class="set-desc">Pilih nuansa warna utama antarmuka.</div></div>
+              <div class="seg-group">
+                ${[["default","Hitam OLED"],["midnight","Tengah Malam"],["amethyst","Amethyst"],["emerald","Emerald"]].map(([k,l]) => `<button class="seg-btn ${prefs.theme===k?"active":""}" onclick="setPref('theme','${k}')">${l}</button>`).join("")}
+              </div>
+            </div>
+            <div class="set-row">
+              <div><div class="set-label">Gaya Tampilan Episode</div><div class="set-desc">Pilih tata letak episode di halaman detail.</div></div>
+              <div class="seg-group">
+                <button class="seg-btn ${prefs.episodeStyle==="grid"?"active":""}" onclick="setPref('episodeStyle','grid')">Grid</button>
+                <button class="seg-btn ${prefs.episodeStyle==="list"?"active":""}" onclick="setPref('episodeStyle','list')">Daftar</button>
+              </div>
+            </div>
+            <div class="set-row">
+              <div><div class="set-label">Tampilkan Trailer</div><div class="set-desc">Tampilkan cuplikan trailer resmi di halaman detail.</div></div>
+              <button class="switch ${prefs.showTrailers?"on":""}" onclick="togglePref('showTrailers')"></button>
+            </div>
+            <div class="set-row">
+              <div><div class="set-label">Mode Bebas Spoiler</div><div class="set-desc">Sembunyikan judul detail tiap episode.</div></div>
+              <button class="switch ${prefs.spoilerFree?"on":""}" onclick="togglePref('spoilerFree')"></button>
+            </div>
+            <div class="set-row">
+              <div><div class="set-label">Kurangi Animasi</div><div class="set-desc">Nonaktifkan efek transisi untuk perangkat lebih ringan.</div></div>
+              <button class="switch ${prefs.reduceMotion?"on":""}" onclick="togglePref('reduceMotion')"></button>
+            </div>
+          </div>`;
+      } else if (settingsTab === "playback") {
+        body.innerHTML = `
+          <div class="settings-card">
+            <h3>Pemutaran</h3>
+            <p class="sub">Atur perilaku pemutar video dan orientasi layar HP.</p>
+            <div class="set-row">
+              <div><div class="set-label">Putar Otomatis Episode Berikutnya</div><div class="set-desc">Langsung lanjut ke episode selanjutnya saat video selesai.</div></div>
+              <button class="switch ${prefs.autoplayNext?"on":""}" onclick="togglePref('autoplayNext')"></button>
+            </div>
+            <div class="set-row">
+              <div><div class="set-label">Durasi Loncat Waktu</div><div class="set-desc">Jarak maju/mundur saat menekan tombol ↺ / ↻ atau panah keyboard.</div></div>
+              <div class="seg-group">
+                ${[5,10,15,30].map((s) => `<button class="seg-btn ${prefs.seekSec===s?"active":""}" onclick="setPref('seekSec',${s})">${s} detik</button>`).join("")}
+              </div>
+            </div>
+            <div class="set-row">
+              <div><div class="set-label">Subtitle Bahasa Indonesia Otomatis</div><div class="set-desc">Aktifkan subtitle Bahasa Indonesia secara otomatis saat memutar.</div></div>
+              <button class="switch ${prefs.autoSubtitles?"on":""}" onclick="togglePref('autoSubtitles')"></button>
+            </div>
+            <div class="set-row">
+              <div><div class="set-label">Auto-Landscape di HP</div><div class="set-desc">Otomatis putar layar menjadi landscape saat mulai menonton di HP.</div></div>
+              <button class="switch ${prefs.autoLandscapeMobile?"on":""}" onclick="togglePref('autoLandscapeMobile')"></button>
+            </div>
+          </div>`;
+      } else if (settingsTab === "servers") {
+        body.innerHTML = `
+          <div class="settings-card">
+            <h3>Urutan Prioritas Server</h3>
+            <p class="sub">Atur server EncDecEndpoints yang paling Anda prioritaskan saat memutar.</p>
+            ${prefs.serverOrder.map((srv, i) => `
+              <div class="order-item">
+                <span>${i + 1}. ${esc(srv)}</span>
+                <div class="order-btns">
+                  <button onclick="moveServerOrder(${i}, -1)">↑</button>
+                  <button onclick="moveServerOrder(${i}, 1)">↓</button>
+                </div>
+              </div>
+            `).join("")}
+          </div>`;
+      } else if (settingsTab === "subtitles") {
+        body.innerHTML = `
+          <div class="settings-card">
+            <h3>Kustomisasi Subtitle</h3>
+            <p class="sub">Atur font, ukuran, warna, dan latar buram subtitle agar nyaman dibaca.</p>
+            <div class="set-row">
+              <div><div class="set-label">Jenis Huruf (Font)</div></div>
+              <div class="seg-group">
+                ${[["default","Default"],["netflix","Netflix"],["montserrat","Montserrat"],["cinema","Sinematik"]].map(([k,l]) => `<button class="seg-btn ${prefs.subFont===k?"active":""}" onclick="setPref('subFont','${k}')">${l}</button>`).join("")}
+              </div>
+            </div>
+            <div class="set-row">
+              <div><div class="set-label">Ukuran Teks</div></div>
+              <div class="seg-group">
+                ${[85,100,120,140,160].map((sz) => `<button class="seg-btn ${prefs.subSize===sz?"active":""}" onclick="setPref('subSize',${sz})">${sz}%</button>`).join("")}
+              </div>
+            </div>
+            <div class="set-row">
+              <div><div class="set-label">Warna Teks</div></div>
+              <div class="seg-group">
+                ${[["#FFFFFF","Putih"],["#F5C518","Kuning"],["#38BDF8","Cyan"],["#4ADE80","Hijau"]].map(([c,l]) => `<button class="seg-btn ${prefs.subColor===c?"active":""}" onclick="setPref('subColor','${c}')">${l}</button>`).join("")}
+              </div>
+            </div>
+            <div class="set-row">
+              <div><div class="set-label">Latar Buram (Background Blur)</div><div class="set-desc">Tambahkan latar gelap buram lembut di belakang teks subtitle.</div></div>
+              <button class="switch ${prefs.subBgBlur?"on":""}" onclick="togglePref('subBgBlur')"></button>
+            </div>
+            <div class="sub-preview-box">
+              <span class="sub-preview-text">Contoh tampilan subtitle Bahasa Indonesia di SwaraPlay.</span>
+            </div>
+          </div>`;
+      }
+    }
+
+    // ===== PRE-RESOLVE & DETAIL VIEW =====
+    function buildResolveUrl(item, season, episode, fast = true) {
+      const q = new URLSearchParams({
+        id: item.id || "", imdbId: item.imdbId || "", tmdbId: item.tmdbId || "",
+        aniListId: item.aniListId || "", malId: item.malId || "", kisskhId: item.kisskhId || "",
+        title: item.title || "", year: item.year || "", category: item.category || "MOVIE",
+        season: String(season || 1), episode: String(episode || 1), fast: fast ? "1" : "0",
+      });
+      return `/api/resolve?${q.toString()}`;
+    }
+    function preResolveStream(item, season = 1, episode = 1) {
+      const k = `${item.id}_${season}_${episode}`;
+      if (preResolveCache.has(k)) return preResolveCache.get(k);
+      const p = fetch(buildResolveUrl(item, season, episode, true)).then((r) => r.json()).catch(() => ({ servers: [], subtitles: [] }));
+      preResolveCache.set(k, p);
+      return p;
+    }
+
+    window.openDetailByKey = (key) => { const item = itemStore.get(key); if (item) openDetail(item); };
+    function updateDetailSaveBtn() {
+      const btn = document.getElementById("detailSaveBtn");
+      if (!btn || !currentDetailItem) return;
+      const saved = isSaved(currentDetailItem);
+      btn.textContent = saved ? "✓" : "+";
+      btn.classList.toggle("saved", saved);
+    }
+
+    async function openDetail(item) {
+      currentDetailItem = item;
+      currentDetailData = null;
+      preResolveStream(item, 1, 1);
+      history.pushState({ view: "detail" }, "");
+
+      document.getElementById("browseView").style.display = "none";
+      document.getElementById("settingsView").classList.remove("active");
+      document.getElementById("topBar").classList.add("hidden-nav");
+      document.getElementById("detailView").classList.add("active");
+      window.scrollTo({ top: 0, behavior: "instant" });
+
+      document.getElementById("detailHero").style.backgroundImage = `url('${item.backdrop || item.poster}')`;
+      document.getElementById("detailTitle").textContent = item.title;
+      document.getElementById("detailGenres").textContent = (item.genres || []).join("  •  ") || (item.category === "ANIME" ? "Anime" : "Hiburan");
+      document.getElementById("detailSynopsis").textContent = item.overview || "Memuat deskripsi...";
+      document.getElementById("detailMetaRow").innerHTML = `${item.year ? `<span>${esc(item.year)}</span>` : ""}<span class="meta-box">HD</span>${item.rating ? `<span style="color:var(--gold);font-weight:800;">★ ${esc(item.rating)}</span>` : ""}`;
+      document.getElementById("detailDirectors").textContent = "";
+      document.getElementById("detailInfoCard").innerHTML = `
+        <div class="info-row"><span>Kategori</span><span>${item.category === "MOVIE" ? "Film" : item.category === "SERIES" ? "Serial TV" : item.category === "ANIME" ? "Anime" : "Drama Asia"}</span></div>
+        <div class="info-row"><span>Tahun Rilis</span><span>${esc(item.year || "-")}</span></div>
+        <div class="info-row"><span>Kualitas</span><span>Full HD</span></div>
+      `;
+      document.getElementById("detailPlayBtn").onclick = () => startWatch(item, 1, 1);
+      document.getElementById("detailSaveBtn").onclick = () => toggleSave(item);
+      document.getElementById("detailShareBtn").onclick = () => {
+        if (navigator.share) navigator.share({ title: item.title, url: location.href }).catch(() => {});
+        else { navigator.clipboard?.writeText(location.href); showToast("Tautan disalin"); }
+      };
+      updateDetailSaveBtn();
+
+      document.getElementById("detailEpisodesWrap").innerHTML = "";
+      document.getElementById("detailCastWrap").innerHTML = "";
+      document.getElementById("detailTrailerWrap").innerHTML = "";
+      document.getElementById("detailSimilarWrap").innerHTML = "";
+
+      try {
+        const d = await fetch(`/api/detail?id=${encodeURIComponent(item.id)}&category=${encodeURIComponent(item.category)}&title=${encodeURIComponent(item.title)}&totalEpisodes=${item.totalEpisodes || 12}`).then((r) => r.json());
+        if (currentDetailItem?.id !== item.id) return;
+        currentDetailData = d;
+        if (d.overview) document.getElementById("detailSynopsis").textContent = d.overview;
+        document.getElementById("detailMetaRow").innerHTML = `${item.year ? `<span>${esc(item.year)}</span>` : ""}${d.runtime ? `<span>${esc(d.runtime)}</span>` : ""}<span class="meta-box">HD</span>${item.rating ? `<span style="color:var(--gold);font-weight:800;">★ ${esc(item.rating)}</span>` : ""}`;
+        if (d.directors?.length) document.getElementById("detailDirectors").textContent = `Sutradara: ${d.directors.join(", ")}`;
+        document.getElementById("detailInfoCard").innerHTML = `
+          <div class="info-row"><span>Durasi</span><span>${esc(d.runtime || "-")}</span></div>
+          <div class="info-row"><span>Bahasa</span><span>${esc(d.language || "Bahasa Inggris")}</span></div>
+          <div class="info-row"><span>Tanggal Rilis</span><span>${esc(d.releaseDate || item.year || "-")}</span></div>
+        `;
+        if (d.episodes?.length && item.category !== "MOVIE") renderDetailEpisodes(item, d.episodes, d.episodes[0].season || 1);
+        if (d.cast?.length) {
+          document.getElementById("detailCastWrap").innerHTML = `
+            <h3 class="detail-section-title">Pemeran</h3>
+            <div class="cast-row">
+              ${d.cast.map((c) => `
+                <div class="cast-item">
+                  <div class="cast-avatar">
+                    ${c.photo ? `<img src="${esc(c.photo)}" alt="${esc(c.name)}" loading="lazy" onerror="this.remove();" />` : esc((c.name || "?").slice(0, 2).toUpperCase())}
+                  </div>
+                  <div class="cast-name">${esc(c.name)}</div>
+                  <div class="cast-role">${esc(c.role || "Pemeran")}</div>
+                </div>
+              `).join("")}
+            </div>`;
+        }
+        if (prefs.showTrailers && d.trailerYoutubeId) {
+          document.getElementById("detailTrailerWrap").innerHTML = `
+            <h3 class="detail-section-title">Trailer</h3>
+            <div class="trailer-box"><iframe src="https://www.youtube.com/embed/${esc(d.trailerYoutubeId)}" allowfullscreen></iframe></div>`;
+        }
+        const similarList = d.similar?.length
+          ? d.similar
+          : (item.category === "ANIME" ? catalog.animeTrend : item.category === "ASIAN_DRAMA" ? catalog.dramas : item.category === "SERIES" ? catalog.series : catalog.movies).filter((x) => x.id !== item.id).slice(0, 14);
+        if (similarList.length) {
+          document.getElementById("detailSimilarWrap").innerHTML = `<h3 class="detail-section-title">Rekomendasi Serupa</h3><div class="shelf">${similarList.map(cardHtml).join("")}</div>`;
+        }
+      } catch {}
+    }
+
+    function renderDetailEpisodes(item, allEpisodes, activeSeason) {
+      const seasons = [...new Set(allEpisodes.map((e) => e.season || 1))].sort((a, b) => a - b);
+      const eps = allEpisodes.filter((e) => (e.season || 1) === activeSeason);
+      document.getElementById("detailEpisodesWrap").innerHTML = `
+        <h3 class="detail-section-title">Episode (${eps.length})</h3>
+        ${seasons.length > 1 ? `<div class="season-tabs">${seasons.map((s) => `<button class="chip ${s === activeSeason ? "active" : ""}" onclick="switchDetailSeason(${s})">Musim ${s}</button>`).join("")}</div>` : ""}
+        <div class="ep-grid ${prefs.episodeStyle === "list" ? "list-style" : ""}">
+          ${eps.map((e) => `
+            <button class="ep-card" onclick="playEpisodeFromDetail(${e.season || 1}, ${e.episode})">
+              <div class="ep-num">Musim ${e.season || 1} • Episode ${e.episode}</div>
+              <div class="ep-title">${prefs.spoilerFree ? `Episode ${e.episode}` : esc(e.title || `Episode ${e.episode}`)}</div>
+            </button>
+          `).join("")}
+        </div>`;
+    }
+    window.switchDetailSeason = (s) => { if (currentDetailItem && currentDetailData?.episodes) renderDetailEpisodes(currentDetailItem, currentDetailData.episodes, s); };
+    window.playEpisodeFromDetail = (s, e) => { if (currentDetailItem) startWatch(currentDetailItem, s, e); };
+    window.closeDetail = (restoreBrowse = true, popHist = false) => {
+      document.getElementById("detailView").classList.remove("active");
+      if (restoreBrowse) {
+        document.getElementById("browseView").style.display = "block";
+        document.getElementById("topBar").classList.remove("hidden-nav");
+      }
+    };
+
+    // ===== FULLSCREEN CINEMA PLAYER (AUTO-LANDSCAPE & EASY EXIT) =====
+    const videoEl = document.getElementById("watchVideo");
+    const spinnerEl = document.getElementById("playerSpinner");
+    const hudEl = document.getElementById("playerHud");
+    const seekSlider = document.getElementById("seekSlider");
+
+    function showHud() {
+      hudEl.classList.remove("hide");
+      clearTimeout(hudTimer);
+      if (!videoEl.paused && !openSheetType) hudTimer = setTimeout(() => hudEl.classList.add("hide"), 3400);
+    }
+
+    document.getElementById("watchView").addEventListener("mousemove", showHud);
+    document.getElementById("watchView").addEventListener("click", (e) => {
+      if (e.target === videoEl || e.target === hudEl) {
+        if (openSheetType) closeSheet();
+        else if (hudEl.classList.contains("hide")) showHud();
+        else hudEl.classList.add("hide");
+      }
+    });
+
+    videoEl.addEventListener("waiting", () => spinnerEl.classList.add("show"));
+    videoEl.addEventListener("playing", () => { spinnerEl.classList.remove("show"); updatePlayIcon(); showHud(); });
+    videoEl.addEventListener("pause", () => { updatePlayIcon(); hudEl.classList.remove("hide"); });
+    videoEl.addEventListener("ended", () => {
+      if (prefs.autoplayNext && currentWatchItem && currentDetailData?.episodes?.length) {
+        const eps = currentDetailData.episodes;
+        const idx = eps.findIndex((e) => (e.season || 1) === currentSeason && e.episode === currentEpisode);
+        if (idx >= 0 && idx + 1 < eps.length) {
+          startWatch(currentWatchItem, eps[idx + 1].season || 1, eps[idx + 1].episode);
+        }
+      }
+    });
+    videoEl.addEventListener("timeupdate", () => {
+      if (!videoEl.duration) return;
+      document.getElementById("timeCurrent").textContent = formatTime(videoEl.currentTime);
+      document.getElementById("timeDuration").textContent = formatTime(videoEl.duration);
+      seekSlider.value = String((videoEl.currentTime / videoEl.duration) * 100);
+    });
+    seekSlider.addEventListener("input", () => {
+      if (videoEl.duration) videoEl.currentTime = (Number(seekSlider.value) / 100) * videoEl.duration;
+    });
+
+    function updatePlayIcon() {
+      document.getElementById("playPauseIcon").innerHTML = videoEl.paused
+        ? `<polygon points="6 4 20 12 6 20 6 4"/>`
+        : `<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>`;
+    }
+    window.togglePlayPause = () => { if (videoEl.paused) videoEl.play().catch(() => {}); else videoEl.pause(); };
+    window.seekBy = (delta) => {
+      if (!Number.isFinite(videoEl.currentTime)) return;
+      videoEl.currentTime = Math.max(0, Math.min(videoEl.duration || 99999, videoEl.currentTime + delta));
+      showHud();
+    };
+    window.togglePiP = async () => {
+      try {
+        if (document.pictureInPictureElement) await document.exitPictureInPicture();
+        else if (document.pictureInPictureEnabled) await videoEl.requestPictureInPicture();
+      } catch {}
+    };
+
+    async function enterMobileLandscape() {
+      const el = document.getElementById("watchView");
+      try {
+        if (!document.fullscreenElement && el.requestFullscreen) await el.requestFullscreen();
+        if (screen.orientation && screen.orientation.lock) {
+          await screen.orientation.lock("landscape");
+          el.classList.remove("force-landscape");
+          isForcedLandscape = false;
+          return;
+        }
+      } catch {}
+      // Fallback CSS 90deg landscape rotation on portrait mobile
+      if (window.innerHeight > window.innerWidth) {
+        el.classList.add("force-landscape");
+        isForcedLandscape = true;
+      }
+    }
+
+    window.toggleMobileLandscape = async () => {
+      const el = document.getElementById("watchView");
+      if (document.fullscreenElement || isForcedLandscape) {
+        el.classList.remove("force-landscape");
+        isForcedLandscape = false;
+        try { if (screen.orientation?.unlock) screen.orientation.unlock(); } catch {}
+        try { if (document.fullscreenElement) await document.exitFullscreen(); } catch {}
+      } else {
+        await enterMobileLandscape();
+      }
+    };
+
+    // Keyboard shortcuts
+    window.addEventListener("keydown", (e) => {
+      if (!document.getElementById("watchView").classList.contains("active")) return;
+      if (e.key === "Escape") { if (openSheetType) closeSheet(); else closePlayer(); }
+      else if (e.code === "Space") { e.preventDefault(); togglePlayPause(); }
+      else if (e.key === "ArrowLeft") seekBy(-prefs.seekSec);
+      else if (e.key === "ArrowRight") seekBy(prefs.seekSec);
+      else if (e.key.toLowerCase() === "f") toggleMobileLandscape();
+      else if (e.key.toLowerCase() === "m") videoEl.muted = !videoEl.muted;
+      else if (e.key.toLowerCase() === "c") toggleSheet("subtitles");
+    });
+
+    async function startWatch(item, season = 1, episode = 1) {
+      currentWatchItem = item;
+      currentSeason = season;
+      currentEpisode = episode;
+      currentServers = [];
+      currentSubtitles = [];
+      currentServerIdx = 0;
+      activeSubIdx = -1;
+      closeSheet();
+      history.pushState({ view: "watch" }, "");
+
+      const wv = document.getElementById("watchView");
+      wv.classList.add("active");
+      document.getElementById("watchTitle").textContent = item.category === "MOVIE" ? item.title : `${item.title} • S${season} E${episode}`;
+      document.getElementById("hudEpisodesBtn").style.display = item.category !== "MOVIE" && currentDetailData?.episodes?.length ? "inline-flex" : "none";
+
+      if (window.innerWidth <= 900 && prefs.autoLandscapeMobile) {
+        enterMobileLandscape();
+      }
+
+      spinnerEl.classList.add("show");
+      showHud();
+
+      // Fetch guaranteed multi-source + Indonesian subtitles in parallel
+      const subParams = new URLSearchParams({
+        id: item.id || "", imdbId: item.imdbId || "", tmdbId: item.tmdbId || "",
+        title: item.title || "", category: item.category || "MOVIE",
+        season: String(season || 1), episode: String(episode || 1),
+      });
+      fetch(`/api/subtitles?${subParams.toString()}`)
+        .then((r) => r.json())
+        .then((subRes) => {
+          if (currentWatchItem?.id !== item.id || currentEpisode !== episode) return;
+          mergeSubtitles(subRes?.subtitles || [], []);
+          if (openSheetType === "subtitles") renderSheet("subtitles");
+        })
+        .catch(() => {});
+
+      const fastData = await preResolveStream(item, season, episode);
+      if (currentWatchItem?.id !== item.id || currentEpisode !== episode) return;
+
+      currentServers = sortServersByPref(fastData?.servers || []);
+      mergeSubtitles(fastData?.subtitles || [], currentServers[0]?.subtitles || []);
+
+      if (currentServers.length > 0) {
+        playServerIndex(0);
+      } else {
+        const fullData = await fetch(buildResolveUrl(item, season, episode, false)).then((r) => r.json()).catch(() => ({ servers: [], subtitles: [] }));
+        if (currentWatchItem?.id !== item.id || currentEpisode !== episode) return;
+        currentServers = sortServersByPref(fullData?.servers || []);
+        mergeSubtitles(fullData?.subtitles || [], currentServers[0]?.subtitles || []);
+        if (currentServers.length > 0) playServerIndex(0);
+        else { spinnerEl.classList.remove("show"); showToast("Server sementara sibuk, coba episode atau judul lain."); }
+      }
+
+      if (!fastData?.done) {
+        fetch(buildResolveUrl(item, season, episode, false))
+          .then((r) => r.json())
+          .then((fullData) => {
+            if (currentWatchItem?.id !== item.id || currentEpisode !== episode) return;
+            const seen = new Set(currentServers.map((s) => s.streamUrl));
+            for (const s of fullData?.servers || []) {
+              if (s?.streamUrl && !seen.has(s.streamUrl)) { seen.add(s.streamUrl); currentServers.push(s); }
+            }
+            mergeSubtitles(fullData?.subtitles || [], []);
+            if (openSheetType === "servers") renderSheet("servers");
+            if (openSheetType === "subtitles") renderSheet("subtitles");
+          })
+          .catch(() => {});
+      }
+    }
+
+    function sortServersByPref(list) {
+      const order = prefs.serverOrder || [];
+      return list.slice().sort((a, b) => {
+        const ia = order.findIndex((o) => String(a.name || "").toLowerCase().includes(o.toLowerCase()));
+        const ib = order.findIndex((o) => String(b.name || "").toLowerCase().includes(o.toLowerCase()));
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      });
+    }
+
+    function mergeSubtitles(wyzieSubs, serverSubs) {
+      const combined = [...(wyzieSubs || []), ...(serverSubs || [])];
+      const seen = new Set(currentSubtitles.map((s) => s.url));
+      for (const s of combined) {
+        if (s?.url && !seen.has(s.url)) { seen.add(s.url); currentSubtitles.push(s); }
+      }
+      // Guarantee Bahasa Indonesia stays on top (and auto-translate fallback if only non-Indo provider track exists)
+      const hasIndo = currentSubtitles.some((s) => String(s.label || "").startsWith("Bahasa Indonesia"));
+      if (!hasIndo && currentSubtitles.length > 0) {
+        const base = currentSubtitles.find((s) => String(s.label || "").startsWith("Bahasa Inggris")) || currentSubtitles[0];
+        if (base?.rawUrl) {
+          currentSubtitles.unshift({
+            label: "Bahasa Indonesia",
+            lang: "id",
+            rawUrl: base.rawUrl,
+            url: `/api/sub/translate?url=${encodeURIComponent(base.rawUrl)}`,
+          });
+        }
+      }
+      if (prefs.autoSubtitles && activeSubIdx === -1 && currentSubtitles.length > 0) {
+        const indoIdx = currentSubtitles.findIndex((s) => String(s.label || "").startsWith("Bahasa Indonesia"));
+        applySubtitle(indoIdx >= 0 ? indoIdx : 0);
+      }
+    }
+
+    function applySubtitle(idx) {
+      activeSubIdx = idx;
+      videoEl.querySelectorAll("track").forEach((t) => t.remove());
+      if (idx >= 0 && currentSubtitles[idx]) {
+        const tr = document.createElement("track");
+        tr.kind = "subtitles";
+        tr.label = currentSubtitles[idx].label;
+        tr.srclang = "id";
+        tr.src = currentSubtitles[idx].url;
+        tr.default = true;
+        videoEl.appendChild(tr);
+        setTimeout(() => { if (videoEl.textTracks[0]) videoEl.textTracks[0].mode = "showing"; }, 140);
+      }
+    }
+
+    function playServerIndex(idx) {
+      const srv = currentServers[idx];
+      if (!srv) return;
+      currentServerIdx = idx;
+      spinnerEl.classList.add("show");
+      if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+
+      const src = srv.proxyUrl;
+      const failOver = () => {
+        if (currentServerIdx + 1 < currentServers.length) playServerIndex(currentServerIdx + 1);
+        else spinnerEl.classList.remove("show");
+      };
+
+      if (window.Hls && Hls.isSupported() && !/\.mp4(\?|$)/i.test(srv.streamUrl)) {
+        hlsInstance = new Hls({ maxBufferLength: 30, enableWorker: true });
+        hlsInstance.loadSource(src);
+        hlsInstance.attachMedia(videoEl);
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => videoEl.play().catch(() => {}));
+        hlsInstance.on(Hls.Events.ERROR, (_, data) => { if (data.fatal) failOver(); });
+      } else {
+        videoEl.src = src;
+        videoEl.onerror = failOver;
+        videoEl.play().catch(() => {});
+      }
+    }
+
+    window.closePlayer = (popHist = false) => {
+      const wv = document.getElementById("watchView");
+      wv.classList.remove("active", "force-landscape");
+      isForcedLandscape = false;
+      try { if (screen.orientation?.unlock) screen.orientation.unlock(); } catch {}
+      try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch {}
+      closeSheet();
+      videoEl.pause();
+      videoEl.removeAttribute("src");
+      videoEl.load();
+      if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+      spinnerEl.classList.remove("show");
+    };
+
+    // ===== PLAYER SHEET =====
+    window.toggleSheet = (type) => {
+      if (openSheetType === type) return closeSheet();
+      openSheetType = type;
+      renderSheet(type);
+      document.getElementById("playerSheet").classList.add("open");
+      clearTimeout(hudTimer);
+    };
+    window.closeSheet = () => {
+      openSheetType = null;
+      document.getElementById("playerSheet").classList.remove("open");
+    };
+    function renderSheet(type) {
+      const titleEl = document.getElementById("sheetTitle");
+      const bodyEl = document.getElementById("sheetBody");
+      if (type === "servers") {
+        titleEl.textContent = `Servers (${currentServers.length})`;
+        bodyEl.innerHTML = currentServers.length
+          ? currentServers.map((s, i) => `<button class="sheet-opt ${i === currentServerIdx ? "active" : ""}" onclick="playServerIndex(${i}); closeSheet();"><span>${esc(s.name)}</span><span style="opacity:0.75;font-size:11.5px;">${esc(s.quality)}</span></button>`).join("")
+          : `<p style="color:var(--muted);font-size:13px;">Memuat daftar server...</p>`;
+      } else if (type === "subtitles") {
+        titleEl.textContent = "Subtitle";
+        bodyEl.innerHTML = `
+          <button class="sheet-opt ${activeSubIdx === -1 ? "active" : ""}" onclick="applySubtitle(-1); closeSheet();">Matikan Subtitle</button>
+          ${currentSubtitles.map((s, i) => `<button class="sheet-opt ${i === activeSubIdx ? "active" : ""}" onclick="applySubtitle(${i}); closeSheet();">${esc(s.label)}</button>`).join("")}
+        `;
+      } else if (type === "episodes") {
+        titleEl.textContent = "Pilih Episode";
+        const eps = currentDetailData?.episodes || [];
+        bodyEl.innerHTML = eps.map((e) => `<button class="sheet-opt ${e.season === currentSeason && e.episode === currentEpisode ? "active" : ""}" onclick="startWatch(currentWatchItem, ${e.season || 1}, ${e.episode}); closeSheet();"><span>Musim ${e.season || 1} • Episode ${e.episode}</span></button>`).join("");
+      } else if (type === "settings") {
+        titleEl.textContent = "Pengaturan Pemutar";
+        bodyEl.innerHTML = [0.75, 1, 1.25, 1.5, 2].map((sp) => `
+          <button class="sheet-opt ${videoEl.playbackRate === sp ? "active" : ""}" onclick="videoEl.playbackRate=${sp}; showToast('Kecepatan ${sp}x'); closeSheet();">
+            <span>Kecepatan Putar</span><span>${sp}x</span>
+          </button>`).join("") + `
+          <button class="sheet-opt" onclick="videoEl.style.objectFit = videoEl.style.objectFit === 'cover' ? 'contain' : 'cover'; closeSheet();">
+            <span>Mode Layar</span><span>${videoEl.style.objectFit === "cover" ? "Penuh (Crop)" : "Proporsional"}</span>
+          </button>`;
+      }
+    }
+
+    // ===== BOOT =====
+    (async function init() {
+      try {
+        const data = await fetch("/api/catalog/home").then((r) => r.json());
+        catalog = data;
+        heroSlides = [
+          ...(catalog.movies || []).slice(0, 3),
+          ...(catalog.series || []).slice(0, 2),
+          ...(catalog.dramas || []).slice(0, 2),
+          ...(catalog.animeTrend || []).slice(0, 2),
+        ].filter((x) => x && (x.backdrop || x.poster));
+        if (heroSlides.length) {
+          heroIdx = 0;
+          setHero(heroSlides[0]);
+          renderHeroDots();
+          restartHeroTimer();
+        }
+        renderMain();
+      } catch {}
+    })();
+  </script>
+</body>
+</html>
