@@ -1,0 +1,3169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#070B08" />
+  <title>SwaraPlay — Streaming Film & Serial TV</title>
+  <link rel="icon" type="image/png" href="/logo.png" />
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+  <style>
+    :root {
+      --bg: #070B08;
+      --bg-elev: #111613;
+      --surface: rgba(18, 24, 20, 0.72);
+      --surface2: rgba(26, 34, 28, 0.86);
+      --glass: rgba(16, 22, 18, 0.62);
+      --glass-strong: rgba(12, 16, 14, 0.86);
+      --glass-border: rgba(255, 255, 255, 0.13);
+      --text: #FFFFFF;
+      --muted: #A1A8A3;
+      --accent: #FFFFFF;
+      --accent-ink: #070B08;
+      --brand-green: #22C55E;
+      --brand-glow: rgba(34, 197, 94, 0.28);
+      --brand-glow2: rgba(16, 185, 129, 0.18);
+      --gold: #F5C518;
+      --sub-font: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+      --sub-size: 100%;
+      --sub-color: #FFFFFF;
+      --sub-bg: rgba(10, 12, 10, 0.68);
+      --sub-pos: 28px;
+    }
+    body[data-theme="oled"]     { --bg: #000000; --bg-elev: #0D0D0F; --glass: rgba(16,16,18,0.72); --surface: rgba(18,18,22,0.78); --brand-glow: rgba(255,255,255,0.08); --brand-glow2: rgba(255,255,255,0.04); }
+    body[data-theme="midnight"] { --bg: #060A14; --bg-elev: #0E1526; --glass: rgba(12,18,34,0.68); --surface: rgba(15,22,40,0.78); --brand-green: #38BDF8; --brand-glow: rgba(56,189,248,0.26); --brand-glow2: rgba(37,99,235,0.18); }
+    body[data-theme="amethyst"] { --bg: #0C0714; --bg-elev: #170F26; --glass: rgba(24,15,38,0.68); --surface: rgba(28,18,44,0.78); --brand-green: #C084FC; --brand-glow: rgba(192,132,252,0.26); --brand-glow2: rgba(139,92,246,0.18); }
+    body[data-theme="emerald"]  { --bg: #05110C; --bg-elev: #0C2118; --glass: rgba(10,28,20,0.68); --surface: rgba(14,34,25,0.78); --brand-green: #34D399; --brand-glow: rgba(52,211,153,0.32); --brand-glow2: rgba(16,185,129,0.22); }
+    body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after { transition: none !important; animation: none !important; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; min-height: 100vh; overflow-x: hidden; }
+    button, input, select { font-family: inherit; color: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+    img { display: block; }
+
+    /* Ambient Wavy Mesh Background (Search, Lists, Settings) */
+    .ambient-page {
+      min-height: 100vh;
+      position: relative;
+      background:
+        radial-gradient(ellipse 80% 55% at 15% 18%, var(--brand-glow), transparent 65%),
+        radial-gradient(ellipse 70% 50% at 85% 28%, var(--brand-glow2), transparent 62%),
+        radial-gradient(ellipse 65% 55% at 45% 80%, var(--brand-glow), transparent 70%),
+        var(--bg);
+    }
+
+    /* ===== TOP FLOATING NAVBAR (CINEJOY STYLE — ZERO BOTTOM NAV!) ===== */
+    .topbar-wrap {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+      padding: max(12px, env(safe-area-inset-top)) 20px 8px;
+      display: flex; align-items: center; justify-content: space-between;
+      pointer-events: none;
+    }
+    .topbar-wrap.hidden-nav { display: none; }
+    .brand-pill {
+      pointer-events: auto;
+      display: flex; align-items: center; gap: 9px;
+      padding: 6px 12px 6px 8px; border-radius: 999px;
+      background: var(--glass); backdrop-filter: blur(22px) saturate(165%); -webkit-backdrop-filter: blur(22px) saturate(165%);
+      border: 1px solid var(--glass-border);
+      font-weight: 800; font-size: 15.5px; letter-spacing: -0.02em; cursor: pointer;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.42);
+    }
+    .brand-pill img { width: 28px; height: 28px; border-radius: 8px; object-fit: cover; }
+
+    .nav-dock {
+      pointer-events: auto;
+      display: flex; align-items: center; gap: 4px;
+      padding: 5px; border-radius: 999px;
+      background: var(--glass-strong); backdrop-filter: blur(24px) saturate(170%); -webkit-backdrop-filter: blur(24px) saturate(170%);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 12px 36px rgba(0,0,0,0.48);
+    }
+    .nav-btn {
+      padding: 8px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 600;
+      color: var(--muted); transition: all .18s ease; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .nav-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
+    .nav-btn.active { background: var(--accent); color: var(--accent-ink); }
+    .nav-icon-btn {
+      width: 36px; height: 36px; border-radius: 999px;
+      display: grid; place-items: center; color: #fff;
+      background: rgba(255,255,255,0.08); transition: background .18s, transform .18s;
+      margin-left: 2px;
+    }
+    .nav-icon-btn:hover { background: rgba(255,255,255,0.2); }
+    .nav-icon-btn.active { background: #fff; color: #070B08; }
+    .nav-icon-btn svg { width: 17px; height: 17px; }
+
+    /* Gear Dropdown Menu */
+    .gear-menu {
+      position: fixed; top: 64px; right: 20px; z-index: 80;
+      width: 224px; padding: 8px; border-radius: 18px;
+      background: rgba(16, 20, 18, 0.92); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 18px 50px rgba(0,0,0,0.65);
+      display: none; flex-direction: column; gap: 2px;
+    }
+    .gear-menu.open { display: flex; }
+    .gear-item {
+      display: flex; align-items: center; gap: 11px;
+      padding: 11px 12px; border-radius: 12px; font-size: 13.5px; font-weight: 600;
+      color: #EAEAEA; text-align: left; transition: background .15s;
+    }
+    .gear-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .gear-item svg { width: 17px; height: 17px; opacity: 0.85; flex-shrink: 0; }
+    .gear-sep { height: 1px; background: rgba(255,255,255,0.1); margin: 4px 6px; }
+
+    /* ===== HERO BANNER ===== */
+    .hero {
+      position: relative; width: 100%; height: min(82vh, 650px); min-height: 460px;
+      overflow: hidden; display: flex; align-items: flex-end;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; object-position: center 22%;
+      transition: opacity .5s ease, transform 7s ease;
+    }
+    .hero::after {
+      content: ""; position: absolute; inset: 0;
+      background:
+        linear-gradient(90deg, rgba(7,11,8,0.88) 0%, rgba(7,11,8,0.58) 38%, rgba(7,11,8,0.14) 72%, rgba(7,11,8,0.36) 100%),
+        linear-gradient(180deg, rgba(7,11,8,0.32) 0%, transparent 28%, rgba(7,11,8,0.68) 78%, rgba(7,11,8,0.92) 100%);
+    }
+    .hero-inner {
+      position: relative; z-index: 2; width: min(1380px, 100%); margin: 0 auto;
+      padding: 0 28px 42px; display: flex; justify-content: space-between; align-items: flex-end; gap: 20px;
+    }
+    .hero-copy { max-width: 580px; }
+    .hero-logo-wrap { margin-bottom: 14px; min-height: 44px; display: flex; align-items: flex-end; }
+    .hero-logo-img { max-height: 112px; max-width: min(390px, 82vw); object-fit: contain; object-position: left bottom; filter: drop-shadow(0 8px 24px rgba(0,0,0,0.65)); }
+    .hero-title { font-size: clamp(30px, 4.6vw, 52px); font-weight: 900; line-height: 1.05; letter-spacing: -0.03em; text-shadow: 0 6px 26px rgba(0,0,0,0.6); }
+    .hero-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 13px; color: #D4D4D8; margin: 10px 0 12px; font-weight: 600; }
+    .hero-meta .rating { color: var(--gold); font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+    .hero-desc { font-size: 14.5px; line-height: 1.56; color: #D4D8D5; margin-bottom: 20px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .hero-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .btn-play {
+      background: #fff; color: #070B08; padding: 12px 26px; border-radius: 999px;
+      font-weight: 800; font-size: 14.5px; display: inline-flex; align-items: center; gap: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35); transition: transform .15s, background .15s;
+    }
+    .btn-play:hover { transform: scale(1.03); background: #F0FDF4; }
+    .btn-circle {
+      width: 44px; height: 44px; border-radius: 999px;
+      background: rgba(255,255,255,0.14); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.2); color: #fff;
+      display: grid; place-items: center; transition: background .15s, transform .15s;
+    }
+    .btn-circle:hover { background: rgba(255,255,255,0.26); transform: scale(1.05); }
+    .btn-circle.saved { background: var(--brand-green); color: #041208; border-color: transparent; }
+    .btn-circle svg { width: 19px; height: 19px; }
+    .hero-dots { display: flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 999px; background: rgba(0,0,0,0.38); backdrop-filter: blur(12px); }
+    .hero-dot { width: 7px; height: 7px; border-radius: 999px; background: rgba(255,255,255,0.35); cursor: pointer; transition: all .22s; }
+    .hero-dot.active { width: 22px; background: #fff; }
+
+    /* ===== MAIN CONTENT & ROWS ===== */
+    .main-container { width: min(1380px, 100%); margin: 0 auto; padding: 8px 28px 96px; }
+    .section { margin-bottom: 36px; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
+    .section-title { font-size: 19.5px; font-weight: 800; letter-spacing: -0.02em; display: inline-flex; align-items: center; gap: 8px; }
+    .section-title-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 19.5px; font-weight: 800; letter-spacing: -0.02em; color: #fff; }
+    .section-title-btn:hover { opacity: 0.85; }
+    .provider-inline-select {
+      background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border);
+      color: #fff; border-radius: 10px; padding: 5px 10px; font-size: 15px; font-weight: 800;
+      cursor: pointer; outline: none;
+    }
+    .provider-inline-select option { background: #121614; color: #fff; }
+
+    .row-scroll {
+      display: flex; gap: 14px; overflow-x: auto; padding: 4px 2px 12px;
+      scrollbar-width: none; scroll-snap-type: x proximity;
+    }
+    .row-scroll::-webkit-scrollbar { display: none; }
+
+    /* Home Dynamic Blurred Hero Backdrop */
+    .home-blur-bg {
+      position: fixed; inset: -40px; z-index: 0; pointer-events: none;
+      background-size: cover; background-position: center;
+      filter: blur(62px) saturate(1.45) brightness(0.32);
+      transform: scale(1.12);
+      transition: background-image .7s ease, opacity .5s ease;
+      opacity: 0;
+    }
+    .home-blur-bg.active { opacity: 1; }
+    #appRoot { position: relative; z-index: 1; }
+
+    /* Portrait Poster Card (2:3) — STRICT UNIFORM SIZE */
+    .card {
+      flex: 0 0 158px; width: 158px; min-width: 158px; max-width: 158px;
+      cursor: pointer; transition: transform .2s ease; scroll-snap-align: start;
+      position: relative; overflow: hidden;
+    }
+    .card:hover { transform: translateY(-5px); }
+    .card-poster-wrap {
+      position: relative; width: 100%; aspect-ratio: 2 / 3; border-radius: 14px; overflow: hidden;
+      background: #141916; border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.42);
+    }
+    .card-poster { width: 100%; height: 100%; object-fit: cover; transition: transform .32s ease; }
+    .card:hover .card-poster { transform: scale(1.05); }
+    .card-badge {
+      position: absolute; top: 8px; right: 8px; padding: 3px 7px; border-radius: 8px;
+      background: rgba(0,0,0,0.72); backdrop-filter: blur(8px);
+      font-size: 11px; font-weight: 700; color: var(--gold);
+    }
+    .card-title { margin-top: 8px; font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+
+    /* Continue Watching 16:9 Card */
+    .cw-card {
+      flex: 0 0 280px; cursor: pointer; transition: transform .2s ease; position: relative;
+    }
+    .cw-card:hover { transform: translateY(-4px); }
+    .cw-thumb-wrap {
+      position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden;
+      background: #141916; border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 10px 26px rgba(0,0,0,0.48);
+    }
+    .cw-thumb { width: 100%; height: 100%; object-fit: cover; }
+    .cw-thumb-wrap::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 45%, rgba(0,0,0,0.82) 100%);
+    }
+    .cw-progress-track {
+      position: absolute; left: 10px; right: 10px; bottom: 8px; height: 4px;
+      border-radius: 999px; background: rgba(255,255,255,0.24); z-index: 2; overflow: hidden;
+    }
+    .cw-progress-fill { height: 100%; background: var(--brand-green); border-radius: 999px; }
+    .cw-remove {
+      position: absolute; top: 8px; right: 8px; z-index: 3;
+      width: 28px; height: 28px; border-radius: 999px;
+      background: rgba(0,0,0,0.72); color: #fff; display: none; place-items: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .cw-editing .cw-remove { display: grid; }
+    .cw-meta { margin-top: 8px; }
+    .cw-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cw-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* Browse by Provider Tiles */
+    .provider-tile {
+      flex: 0 0 88px; display: flex; flex-direction: column; align-items: center; gap: 7px; cursor: pointer;
+      transition: transform .18s;
+    }
+    .provider-tile:hover { transform: translateY(-4px); }
+    .provider-box {
+      width: 72px; height: 72px; border-radius: 18px;
+      background: #121714; border: 1px solid rgba(255,255,255,0.12);
+      display: grid; place-items: center; font-weight: 900; font-size: 15px; letter-spacing: -0.02em;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.42); transition: border-color .18s, box-shadow .18s;
+    }
+    .provider-tile.active .provider-box, .provider-tile:hover .provider-box {
+      border-color: var(--brand-green); box-shadow: 0 0 0 2px rgba(34,197,94,0.22);
+    }
+    .provider-name { font-size: 11px; color: var(--muted); text-align: center; line-height: 1.2; max-width: 84px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Grid Layouts */
+    .poster-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(154px, 1fr)); gap: 18px 14px;
+    }
+    .poster-grid .card { flex: none; width: 100%; min-width: 0; max-width: 100%; }
+
+    /* Genre Chips */
+    .chips-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 14px; scrollbar-width: none; }
+    .chips-row::-webkit-scrollbar { display: none; }
+    .chip {
+      padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #D4D4D8;
+      transition: all .15s;
+    }
+    .chip.active, .chip:hover { background: #fff; color: #070B08; border-color: #fff; }
+
+    /* ===== DEDICATED SEARCH VIEW ===== */
+    .search-page { padding: 110px 28px 90px; }
+    .search-hero-box { max-width: 720px; margin: 0 auto 40px; text-align: center; }
+    .search-headline { font-size: clamp(26px, 4vw, 38px); font-weight: 900; letter-spacing: -0.03em; margin-bottom: 18px; }
+    .search-input-bar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 18px; border-radius: 999px;
+      background: rgba(16, 22, 18, 0.72); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+      border: 1px solid rgba(255,255,255,0.18); box-shadow: 0 12px 36px rgba(0,0,0,0.45);
+    }
+    .search-input-bar input {
+      flex: 1; background: none; border: none; outline: none; font-size: 15.5px; color: #fff;
+    }
+    .search-input-bar input::placeholder { color: #8F9992; }
+    .recent-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 14px; }
+    .recent-chip {
+      display: inline-flex; align-items: center; gap: 8px; padding: 6px 13px; border-radius: 999px;
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.14); font-size: 12.5px; font-weight: 600;
+    }
+    .recent-chip span { cursor: pointer; }
+    .recent-chip button { font-size: 14px; opacity: 0.7; }
+    .recent-chip button:hover { opacity: 1; }
+
+    .skeleton-card { aspect-ratio: 2/3; border-radius: 14px; background: linear-gradient(110deg, rgba(255,255,255,0.06) 8%, rgba(255,255,255,0.14) 18%, rgba(255,255,255,0.06) 33%); background-size: 200% 100%; animation: shimmer 1.25s linear infinite; }
+    @keyframes shimmer { to { background-position-x: -200%; } }
+
+    /* ===== QUICK CONTINUE WATCHING POPUP ===== */
+    .cw-popup-backdrop {
+      position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,0.68);
+      backdrop-filter: blur(8px); display: none; place-items: center; padding: 20px;
+    }
+    .cw-popup-backdrop.open { display: grid; }
+    .cw-popup-card {
+      width: min(440px, 100%); border-radius: 22px; overflow: hidden;
+      background: #141916; border: 1px solid rgba(255,255,255,0.16);
+      box-shadow: 0 24px 70px rgba(0,0,0,0.75); position: relative;
+    }
+    .cw-popup-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+    .cw-popup-close {
+      position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border-radius: 999px;
+      background: rgba(0,0,0,0.65); color: #fff; display: grid; place-items: center; font-size: 18px;
+    }
+    .cw-popup-body { padding: 16px 18px 18px; }
+    .cw-popup-title { font-size: 19px; font-weight: 800; margin-bottom: 4px; }
+    .cw-popup-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 12px; }
+    .cw-popup-bar { height: 4px; border-radius: 999px; background: rgba(255,255,255,0.18); margin-bottom: 16px; overflow: hidden; }
+    .cw-popup-bar > div { height: 100%; background: var(--brand-green); }
+    .cw-popup-actions { display: flex; align-items: center; gap: 10px; }
+    .cw-popup-actions .btn-play { flex: 1; justify-content: center; padding: 11px 16px; font-size: 13.5px; }
+    .cw-popup-info {
+      flex: 1; padding: 11px 14px; border-radius: 999px; font-size: 13.5px; font-weight: 700;
+      background: rgba(255,255,255,0.12); color: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    }
+
+    /* ===== DETAIL VIEW (MODAL OR FULL PAGE) ===== */
+    .detail-overlay {
+      position: fixed; inset: 0; z-index: 85; overflow-y: auto;
+      background: rgba(0,0,0,0.78); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      display: none; padding: 28px 16px 60px;
+    }
+    .detail-overlay.open { display: block; }
+    .detail-overlay.fullpage-mode { padding: 0; background: var(--bg); backdrop-filter: none; }
+    .detail-shell {
+      width: min(980px, 100%); margin: 0 auto; border-radius: 26px; overflow: hidden;
+      background: #101512; border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 30px 90px rgba(0,0,0,0.8); position: relative;
+    }
+    .detail-overlay.fullpage-mode .detail-shell {
+      width: 100%; border-radius: 0; border: none; min-height: 100vh; background: var(--bg);
+    }
+    .detail-hero {
+      position: relative; min-height: 360px; display: flex; align-items: flex-end; overflow: hidden;
+    }
+    .detail-hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 22%; }
+    .detail-hero::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(16,21,18,0.22) 0%, rgba(16,21,18,0.68) 65%, #101512 100%);
+    }
+    .detail-overlay.fullpage-mode .detail-hero::after {
+      background: linear-gradient(180deg, rgba(7,11,8,0.25) 0%, rgba(7,11,8,0.72) 65%, var(--bg) 100%);
+    }
+    .detail-close-btn {
+      position: absolute; top: 18px; right: 18px; z-index: 5;
+      width: 40px; height: 40px; border-radius: 999px;
+      background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; display: grid; place-items: center; font-size: 20px;
+    }
+    .detail-back-btn {
+      position: absolute; top: 18px; left: 18px; z-index: 5;
+      padding: 9px 16px; border-radius: 999px;
+      background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 700;
+    }
+    .detail-hero-content { position: relative; z-index: 2; padding: 110px 28px 24px; width: 100%; }
+    .detail-body { padding: 6px 28px 36px; }
+    .detail-cols { display: grid; grid-template-columns: 1.55fr 1fr; gap: 26px; margin-bottom: 28px; }
+    .detail-meta-pills { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; color: #D4D8D5; margin-bottom: 12px; font-weight: 600; }
+    .meta-tag { padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.12); font-size: 11.5px; font-weight: 700; }
+    .detail-overview { font-size: 14.5px; line-height: 1.62; color: #D4D8D5; }
+    .detail-cast-box { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .detail-cast-box strong { color: #fff; }
+    .cast-strip { display: flex; gap: 12px; overflow-x: auto; padding: 10px 0 4px; scrollbar-width: none; }
+    .cast-strip::-webkit-scrollbar { display: none; }
+    .cast-item { flex: 0 0 74px; text-align: center; }
+    .cast-photo { width: 58px; height: 58px; border-radius: 999px; object-fit: cover; margin: 0 auto 5px; background: #1B221E; border: 1px solid rgba(255,255,255,0.14); }
+    .cast-name { font-size: 11px; color: #E4E4E7; font-weight: 600; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* Episodes Toolbar & Cards */
+    .ep-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .season-trigger {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 9px 16px; border-radius: 12px; font-size: 15px; font-weight: 800;
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.16); color: #fff;
+    }
+    .ep-search-input {
+      padding: 9px 14px; border-radius: 999px; width: min(260px, 100%);
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14);
+      font-size: 13px; outline: none;
+    }
+    .ep-carousel { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+    .ep-carousel::-webkit-scrollbar { display: none; }
+    .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(235px, 1fr)); gap: 14px; }
+    .ep-card {
+      flex: 0 0 250px; cursor: pointer; border-radius: 14px; overflow: hidden;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      transition: transform .18s, border-color .18s;
+    }
+    .ep-grid .ep-card { flex: none; width: 100%; }
+    .ep-card:hover { transform: translateY(-3px); border-color: var(--brand-green); }
+    .ep-thumb-wrap { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #161C18; overflow: hidden; }
+    .ep-thumb { width: 100%; height: 100%; object-fit: cover; }
+    .spoiler-blur { filter: blur(14px) brightness(0.6); }
+    .ep-num-badge {
+      position: absolute; top: 8px; left: 8px; padding: 3px 8px; border-radius: 7px;
+      background: rgba(0,0,0,0.74); font-size: 11px; font-weight: 800; color: #fff;
+    }
+    .ep-dur-badge {
+      position: absolute; bottom: 8px; right: 8px; padding: 2px 7px; border-radius: 6px;
+      background: rgba(0,0,0,0.74); font-size: 11px; font-weight: 700; color: #D4D4D8;
+    }
+    .ep-info { padding: 11px 12px 13px; }
+    .ep-title { font-size: 13.5px; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ep-desc { font-size: 12px; color: var(--muted); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* Full-Screen Season Wheel Picker */
+    .wheel-overlay {
+      position: fixed; inset: 0; z-index: 120;
+      background: rgba(7, 11, 8, 0.9); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+      display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px;
+    }
+    .wheel-overlay.open { display: flex; }
+    .wheel-header { position: absolute; top: 24px; font-size: 15px; font-weight: 700; color: var(--muted); }
+    .wheel-close {
+      position: absolute; top: 20px; right: 20px; width: 42px; height: 42px; border-radius: 999px;
+      background: rgba(255,255,255,0.12); color: #fff; font-size: 20px; display: grid; place-items: center;
+    }
+    .wheel-list {
+      width: min(460px, 100%); max-height: 72vh; overflow-y: auto; scrollbar-width: none;
+      display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 36px 0;
+    }
+    .wheel-list::-webkit-scrollbar { display: none; }
+    .wheel-item {
+      padding: 12px 24px; border-radius: 14px; font-size: 20px; font-weight: 700;
+      color: rgba(255,255,255,0.42); transition: all .15s; text-align: center; width: 100%;
+    }
+    .wheel-item:hover { color: rgba(255,255,255,0.85); }
+    .wheel-item.active { color: #fff; font-size: 24px; font-weight: 900; background: rgba(255,255,255,0.1); }
+
+    /* ===== MY LISTS VIEW ===== */
+    .lists-page { padding: 104px 28px 90px; }
+    .lists-inner { width: min(1200px, 100%); margin: 0 auto; }
+    .lists-tabs { display: flex; align-items: center; gap: 22px; margin-bottom: 28px; }
+    .lists-tab { font-size: 28px; font-weight: 900; color: rgba(255,255,255,0.4); letter-spacing: -0.02em; }
+    .lists-tab.active { color: #fff; }
+    .lists-empty-box {
+      max-width: 480px; margin: 56px auto; text-align: center;
+      padding: 36px 24px; border-radius: 24px;
+      background: rgba(16, 22, 18, 0.55); border: 1px solid var(--glass-border);
+      backdrop-filter: blur(20px);
+    }
+    .dashed-plus {
+      width: 140px; height: 94px; margin: 0 auto 20px; border-radius: 16px;
+      border: 2px dashed rgba(255,255,255,0.22); display: grid; place-items: center;
+      font-size: 28px; color: rgba(255,255,255,0.6); cursor: pointer;
+    }
+    .lists-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+
+    /* ===== ACCOUNT 16-DIGIT KEY MODAL ===== */
+    .auth-overlay {
+      position: fixed; inset: 0; z-index: 125; background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(18px); display: none; place-items: center; padding: 20px;
+    }
+    .auth-overlay.open { display: grid; }
+    .auth-card {
+      width: min(410px, 100%); border-radius: 24px; padding: 28px 24px;
+      background: rgba(18, 22, 19, 0.94); border: 1px solid rgba(255,255,255,0.16);
+      box-shadow: 0 24px 70px rgba(0,0,0,0.8); text-align: center; position: relative;
+    }
+    .auth-seg { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 999px; background: rgba(255,255,255,0.08); margin: 16px 0 18px; }
+    .auth-seg button { padding: 9px; border-radius: 999px; font-size: 13.5px; font-weight: 700; color: var(--muted); }
+    .auth-seg button.active { background: #fff; color: #070B08; }
+    .auth-input {
+      width: 100%; padding: 13px 16px; border-radius: 12px;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16);
+      font-size: 15px; letter-spacing: 0.08em; text-align: center; outline: none; margin-bottom: 14px;
+    }
+    .auth-primary-btn {
+      width: 100%; padding: 13px; border-radius: 12px; font-size: 14.5px; font-weight: 800;
+      background: #fff; color: #070B08;
+    }
+
+    /* ===== SETTINGS PAGE (CINEJOY FULL-SCROLL + STICKY JUMP-NAV) ===== */
+    .settings-page { padding: 96px 20px 100px; }
+    .settings-inner { width: min(860px, 100%); margin: 0 auto; }
+    .settings-title-row { display: flex; align-items: center; gap: 12px; font-size: 30px; font-weight: 900; margin-bottom: 18px; letter-spacing: -0.02em; }
+    .settings-jump-nav {
+      position: sticky; top: 72px; z-index: 40;
+      display: flex; gap: 6px; overflow-x: auto; padding: 6px; margin-bottom: 22px;
+      border-radius: 16px; background: rgba(14, 19, 16, 0.86);
+      backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+      border: 1px solid rgba(255,255,255,0.12); scrollbar-width: none;
+    }
+    .settings-jump-nav::-webkit-scrollbar { display: none; }
+    .s-jump-btn {
+      padding: 9px 14px; border-radius: 11px; font-size: 13px; font-weight: 700;
+      color: var(--muted); white-space: nowrap; transition: all .15s;
+    }
+    .s-jump-btn.active, .s-jump-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    .settings-card {
+      padding: 22px 24px; border-radius: 22px; margin-bottom: 20px;
+      background: rgba(16, 22, 18, 0.72); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .settings-card h3 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+    .settings-card .sub-desc { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+    .s-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 13px 0; border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .s-row:first-of-type { border-top: none; }
+    .s-label { font-size: 14.5px; font-weight: 700; }
+    .s-hint { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+    .seg-group { display: inline-flex; padding: 3px; border-radius: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); }
+    .seg-btn { padding: 7px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+    .seg-btn.active { background: #fff; color: #070B08; }
+
+    /* Toggle Switch */
+    .switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0; border-radius: 999px; cursor: pointer;
+      background: rgba(255,255,255,0.18); transition: background .2s;
+    }
+    .slider::before {
+      content: ""; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px;
+      border-radius: 999px; background: #fff; transition: transform .2s;
+    }
+    .switch input:checked + .slider { background: var(--brand-green); }
+    .switch input:checked + .slider::before { transform: translateX(20px); }
+
+    .color-dots { display: flex; gap: 9px; align-items: center; }
+    .color-dot { width: 24px; height: 24px; border-radius: 999px; border: 2px solid transparent; cursor: pointer; }
+    .color-dot.active { border-color: #fff; box-shadow: 0 0 0 2px var(--brand-green); }
+
+    .server-order-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-radius: 12px; margin-bottom: 8px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    }
+    .server-order-btns { display: flex; gap: 6px; }
+    .server-order-btns button {
+      width: 30px; height: 30px; border-radius: 8px; background: rgba(255,255,255,0.1);
+      color: #fff; font-weight: 800; display: grid; place-items: center;
+    }
+
+    /* ===== FULLSCREEN CINEJOY PLAYER ===== */
+    .player-screen {
+      position: fixed; inset: 0; z-index: 200; background: #000;
+      display: none; flex-direction: column; overflow: hidden; user-select: none;
+    }
+    .player-screen.open { display: flex; }
+    .player-stage { position: relative; width: 100%; height: 100%; background: #000; overflow: hidden; }
+    #watchVideo { width: 100%; height: 100%; object-fit: contain; background: #000; transition: filter .15s; }
+    #watchVideo.zoom-fill { object-fit: cover; }
+    #watchVideo.zoom-stretch { object-fit: fill; }
+
+    /* Custom Anti-Overlap Subtitle Layer */
+    .custom-sub-layer {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      bottom: var(--sub-pos); z-index: 12; pointer-events: none;
+      max-width: min(86%, 920px); text-align: center;
+      transition: bottom .22s ease;
+    }
+    .player-screen.hud-visible .custom-sub-layer {
+      bottom: max(112px, calc(var(--sub-pos) + 86px)) !important;
+    }
+    .custom-sub-text {
+      display: inline-block; padding: 6px 14px; border-radius: 10px;
+      font-family: var(--sub-font); font-size: calc(20px * var(--sub-size-num, 1));
+      font-weight: 700; line-height: 1.38; color: var(--sub-color);
+      background: var(--sub-bg);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      text-shadow: 0 2px 6px rgba(0,0,0,0.85);
+      white-space: pre-line;
+    }
+    .custom-sub-text.no-bg { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; text-shadow: 0 2px 8px #000, 0 0 4px #000; }
+    .custom-sub-text.pastel { opacity: 0.92; filter: saturate(0.75); }
+
+    /* Animated Server Loading Overlay */
+    .player-loader {
+      position: absolute; inset: 0; z-index: 16; background: rgba(0,0,0,0.78);
+      display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    }
+    .player-loader.show { display: flex; }
+    .loader-logo { width: 64px; height: 64px; border-radius: 16px; animation: pulseLogo 1.3s ease-in-out infinite; }
+    @keyframes pulseLogo { 0%, 100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.09); opacity: 1; } }
+    .loader-status { font-size: 16px; font-weight: 800; color: #fff; letter-spacing: -0.01em; }
+
+    /* Player HUD */
+    .player-hud {
+      position: absolute; inset: 0; z-index: 18;
+      display: flex; flex-direction: column; justify-content: space-between;
+      background: linear-gradient(180deg, rgba(0,0,0,0.72) 0%, transparent 26%, transparent 66%, rgba(0,0,0,0.88) 100%);
+      opacity: 0; pointer-events: none; transition: opacity .22s ease;
+    }
+    .player-screen.hud-visible .player-hud { opacity: 1; pointer-events: auto; }
+    .hud-top {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: max(14px, env(safe-area-inset-top)) 20px 10px; gap: 12px;
+    }
+    .hud-icon-btn {
+      width: 48px; height: 48px; border-radius: 999px;
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(12px);
+      display: grid; place-items: center; color: #fff; flex-shrink: 0;
+    }
+    .hud-icon-btn:hover { background: rgba(255,255,255,0.22); }
+    .hud-icon-btn svg { width: 22px; height: 22px; }
+    .hud-title { font-size: 16px; font-weight: 800; text-align: center; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .hud-center { display: flex; align-items: center; justify-content: center; gap: 38px; }
+    .hud-skip-btn {
+      width: 56px; height: 56px; border-radius: 999px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800;
+      background: rgba(0,0,0,0.34); transition: transform .15s, background .15s;
+    }
+    .hud-skip-btn:hover { background: rgba(255,255,255,0.18); transform: scale(1.06); }
+    .hud-play-btn {
+      width: 72px; height: 72px; border-radius: 999px;
+      background: rgba(255,255,255,0.18); backdrop-filter: blur(14px);
+      display: grid; place-items: center; color: #fff; transition: transform .15s;
+    }
+    .hud-play-btn:hover { transform: scale(1.07); background: rgba(255,255,255,0.28); }
+    .hud-play-btn svg { width: 34px; height: 34px; }
+
+    .hud-bottom { padding: 0 22px max(16px, env(safe-area-inset-bottom)); }
+    .timeline-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .time-label { font-size: 12.5px; font-weight: 700; color: #E4E4E7; min-width: 52px; font-variant-numeric: tabular-nums; }
+    .time-label.right { text-align: right; }
+    .seek-bar {
+      flex: 1; -webkit-appearance: none; appearance: none; height: 5px; border-radius: 999px;
+      background: rgba(255,255,255,0.26); outline: none; cursor: pointer;
+    }
+    .seek-bar::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px; border-radius: 999px;
+      background: var(--brand-green); box-shadow: 0 0 0 3px rgba(34,197,94,0.3);
+    }
+    .hud-actions { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .hud-action-item {
+      display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 999px;
+      font-size: 13px; font-weight: 700; color: #E4E4E7; background: rgba(255,255,255,0.08);
+      transition: background .15s, color .15s;
+    }
+    .hud-action-item:hover { background: rgba(255,255,255,0.2); color: #fff; }
+    .hud-action-item svg { width: 16px; height: 16px; }
+
+    /* ===== FULL-SCREEN FROSTED PLAYER OVERLAYS (SERVERS / SUBTITLES / SETTINGS / EPISODES) ===== */
+    .p-overlay {
+      position: absolute; inset: 0; z-index: 30;
+      background: rgba(8, 12, 10, 0.9); backdrop-filter: blur(26px); -webkit-backdrop-filter: blur(26px);
+      display: none; flex-direction: column;
+    }
+    .p-overlay.open { display: flex; }
+    .p-overlay-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: max(16px, env(safe-area-inset-top)) 22px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .p-overlay-title { font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .p-overlay-body { flex: 1; overflow-y: auto; padding: 18px 22px 24px; max-width: 820px; width: 100%; margin: 0 auto; }
+    .p-overlay-foot {
+      padding: 12px 22px max(16px, env(safe-area-inset-bottom));
+      border-top: 1px solid rgba(255,255,255,0.1); text-align: center;
+    }
+    .p-close-bar {
+      padding: 10px 36px; border-radius: 999px; font-size: 13px; font-weight: 800; letter-spacing: 0.08em;
+      background: rgba(255,255,255,0.12); color: #fff;
+    }
+    .p-close-bar:hover { background: rgba(255,255,255,0.22); }
+
+    /* Servers Bottom Sheet Drawer */
+    .servers-drawer {
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 32;
+      background: rgba(12, 16, 14, 0.94); backdrop-filter: blur(26px);
+      border-top: 1px solid rgba(255,255,255,0.14); border-radius: 22px 22px 0 0;
+      padding: 16px 20px max(22px, env(safe-area-inset-bottom));
+      max-height: 62vh; overflow-y: auto; display: none;
+    }
+    .servers-drawer.open { display: block; }
+    .server-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 14px; border-radius: 12px; cursor: pointer;
+      font-size: 14.5px; font-weight: 700; transition: background .15s;
+    }
+    .server-row:hover { background: rgba(255,255,255,0.08); }
+    .server-row.active { background: rgba(34,197,94,0.14); color: #fff; }
+
+    /* Player Settings 2x2 Cards & Rows */
+    .p-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+    .p-stat-card {
+      padding: 14px 16px; border-radius: 14px; text-align: left;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.11);
+      transition: background .15s;
+    }
+    .p-stat-card:hover { background: rgba(255,255,255,0.13); }
+    .p-stat-k { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 4px; }
+    .p-stat-v { font-size: 15px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .p-menu-row {
+      display: flex; align-items: center; justify-content: space-between; width: 100%;
+      padding: 14px 12px; border-radius: 12px; font-size: 14.5px; font-weight: 700;
+      transition: background .15s; text-align: left;
+    }
+    .p-menu-row:hover { background: rgba(255,255,255,0.08); }
+
+    /* Subtitles Overlay List */
+    .sub-search-input {
+      width: 100%; padding: 11px 14px; border-radius: 12px; margin: 10px 0 14px;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14);
+      font-size: 14px; outline: none;
+    }
+    .sub-lang-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 700;
+    }
+    .sub-lang-row:hover { background: rgba(255,255,255,0.08); }
+    .sub-lang-row.active { background: rgba(34,197,94,0.15); }
+
+    /* Scroll to top & Toast */
+    .scroll-top-btn {
+      position: fixed; right: 22px; bottom: 24px; z-index: 50;
+      width: 44px; height: 44px; border-radius: 999px;
+      background: var(--glass-strong); border: 1px solid var(--glass-border);
+      backdrop-filter: blur(18px); color: #fff; display: none; place-items: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .scroll-top-btn.show { display: grid; }
+    .toast {
+      position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%) translateY(20px);
+      z-index: 300; padding: 10px 18px; border-radius: 999px;
+      background: rgba(16, 22, 18, 0.94); border: 1px solid rgba(255,255,255,0.18);
+      color: #fff; font-size: 13.5px; font-weight: 700; opacity: 0; pointer-events: none;
+      transition: all .22s ease; box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Range Slider */
+    input[type="range"].sw-range {
+      accent-color: var(--brand-green); cursor: pointer;
+    }
+
+    /* ===== FOOTER & DONATION QRIS MODAL ===== */
+    .site-footer {
+      position: relative; z-index: 2;
+      width: min(1380px, 100%); margin: 12px auto 0; padding: 26px 28px 42px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .footer-brand { display: flex; align-items: center; gap: 10px; }
+    .footer-brand img { width: 30px; height: 30px; border-radius: 8px; }
+    .footer-brand-title { font-size: 15px; font-weight: 800; }
+    .footer-brand-sub { font-size: 12px; color: var(--muted); }
+    .footer-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .footer-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 9px 16px; border-radius: 999px; font-size: 13px; font-weight: 700;
+      background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.16); color: #fff;
+      text-decoration: none; transition: background .15s, transform .15s;
+    }
+    .footer-btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-1px); }
+    .footer-btn.donate { background: var(--brand-green); color: #041208; border-color: transparent; }
+    .footer-btn.donate:hover { background: #4ADE80; }
+    .qris-modal-img { width: min(320px, 100%); border-radius: 16px; margin: 14px auto; border: 1px solid rgba(255,255,255,0.16); background: #fff; }
+
+    @media (max-width: 780px) {
+      .topbar-wrap { padding: max(8px, env(safe-area-inset-top)) 10px 6px; gap: 6px; }
+      .brand-pill span { display: none; }
+      .brand-pill { padding: 5px; }
+      .nav-btn { padding: 7px 11px; font-size: 12.5px; }
+      .hero-inner { padding: 0 16px 28px; flex-direction: column; align-items: flex-start; }
+      .main-container { padding: 6px 16px 84px; }
+      .detail-cols { grid-template-columns: 1fr; }
+      .card { flex: 0 0 132px; width: 132px; min-width: 132px; max-width: 132px; }
+      .cw-card { flex: 0 0 232px; }
+      .p-cards-grid { grid-template-columns: 1fr; }
+      .hud-center { gap: 22px; }
+      .hud-action-item { padding: 7px 11px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body data-theme="default">
+  <div class="home-blur-bg" id="homeBlurBg"></div>
+
+  <!-- TOP FLOATING NAVBAR -->
+  <header class="topbar-wrap" id="topbarWrap">
+    <div class="brand-pill" onclick="navigate('home')">
+      <img src="/logo.png" alt="SwaraPlay" />
+      <span>SwaraPlay</span>
+    </div>
+    <nav class="nav-dock" aria-label="Navigasi Utama">
+      <button class="nav-btn active" data-nav="home" onclick="navigate('home')">Beranda</button>
+      <button class="nav-btn" data-nav="movies" onclick="navigate('movies')">Film</button>
+      <button class="nav-btn" data-nav="series" onclick="navigate('series')">Serial TV</button>
+      <button class="nav-btn" data-nav="lists" onclick="navigate('lists')">Daftar Saya</button>
+      <button class="nav-icon-btn" data-nav="search" title="Pencarian" onclick="navigate('search')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      </button>
+      <button class="nav-icon-btn" id="gearBtn" title="Menu & Pengaturan" onclick="toggleGearMenu(event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </nav>
+  </header>
+
+  <!-- GEAR DROPDOWN MENU -->
+  <div class="gear-menu" id="gearMenu">
+
+    <button class="gear-item" onclick="closeGearMenu(); navigate('settings');">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Pengaturan</span>
+    </button>
+    <div class="gear-sep"></div>
+    <button class="gear-item" onclick="closeGearMenu(); navigate('history');">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Riwayat Tontonan</span>
+    </button>
+    <button class="gear-item" onclick="closeGearMenu(); navigate('calendar');">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Kalender Rilis</span>
+    </button>
+    <div class="gear-sep"></div>
+    <button class="gear-item" onclick="closeGearMenu(); openDonateModal();">
+      <span>❤</span><span>Donasi QRIS</span>
+    </button>
+  </div>
+
+  <!-- MAIN DYNAMIC VIEW ROOT -->
+  <main id="appRoot"></main>
+
+  <footer class="site-footer" id="siteFooter">
+    <div class="footer-brand">
+      <img src="/logo.png" alt="SwaraPlay" />
+      <div>
+        <div class="footer-brand-title">SwaraPlay <span style="color:var(--brand-green);font-weight:700;">by Teves</span></div>
+        <div class="footer-brand-sub">Streaming Film & Serial TV • 100% Lokal Tanpa Login</div>
+      </div>
+    </div>
+    <div class="footer-actions">
+      <a class="footer-btn" href="https://github.com/vipercellid-arch/SwaraPlay" target="_blank" rel="noopener noreferrer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.82.58A12.01 12.01 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        <span>GitHub Repo</span>
+      </a>
+      <button class="footer-btn donate" onclick="openDonateModal()">
+        <span>❤ Donasi QRIS</span>
+      </button>
+    </div>
+  </footer>
+
+  <!-- QRIS VIPERCELL DONATION MODAL -->
+  <div class="auth-overlay" id="donateOverlay" onclick="if(event.target===this) closeDonateModal()">
+    <div class="auth-card" style="max-width:400px;">
+      <button style="position:absolute;top:16px;right:16px;font-size:18px;color:var(--muted);" onclick="closeDonateModal()">✕</button>
+      <h2 style="font-size:20px;font-weight:900;">Dukung SwaraPlay</h2>
+      <p style="font-size:13px;color:var(--muted);margin-top:4px;">Scan QRIS di bawah ini untuk mendukung pengembangan SwaraPlay.</p>
+      <img class="qris-modal-img" src="/qris-vipercell.jpg" alt="QRIS Donasi" />
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <a class="btn-play" style="padding:10px 18px;font-size:13px;text-decoration:none;" href="/qris-vipercell.jpg" download="QRIS-ViperCell-SwaraPlay.jpg">↓ Unduh QRIS</a>
+        <button class="chip" onclick="closeDonateModal()">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTINUE WATCHING QUICK PREVIEW POPUP -->
+  <div class="cw-popup-backdrop" id="cwPopup" onclick="if(event.target===this) closeCwPopup()">
+    <div class="cw-popup-card" id="cwPopupCard"></div>
+  </div>
+
+  <!-- DETAIL OVERLAY (MODAL OR FULL PAGE) -->
+  <div class="detail-overlay" id="detailOverlay" onclick="if(event.target===this) closeDetail()">
+    <div class="detail-shell" id="detailShell"></div>
+  </div>
+
+  <!-- SEASON WHEEL PICKER -->
+  <div class="wheel-overlay" id="seasonWheel" onclick="if(event.target===this) closeSeasonWheel()">
+    <div class="wheel-header">Pilih Musim</div>
+    <button class="wheel-close" onclick="closeSeasonWheel()">✕</button>
+    <div class="wheel-list" id="seasonWheelList"></div>
+  </div>
+
+  <!-- 16-DIGIT ACCOUNT MODAL -->
+  <div class="auth-overlay" id="authOverlay" onclick="if(event.target===this) closeAuthModal()">
+    <div class="auth-card" id="authCard"></div>
+  </div>
+
+  <!-- FULLSCREEN CINEJOY PLAYER -->
+  <div class="player-screen hud-visible" id="playerScreen">
+    <div class="player-stage" id="playerStage" onclick="onStageTap(event)">
+      <video id="watchVideo" playsinline crossorigin="anonymous"></video>
+
+      <!-- Custom Anti-Overlap Subtitle Layer -->
+      <div class="custom-sub-layer" id="customSubLayer" style="display:none;">
+        <span class="custom-sub-text" id="customSubText"></span>
+      </div>
+
+      <!-- Server Loading Animation -->
+      <div class="player-loader" id="playerLoader">
+        <img class="loader-logo" src="/logo.png" alt="SwaraPlay" />
+        <div class="loader-status" id="loaderStatus">Menyiapkan server...</div>
+      </div>
+
+      <!-- Player HUD -->
+      <div class="player-hud" id="playerHud">
+        <div class="hud-top">
+          <button class="hud-icon-btn" title="Keluar" onclick="closePlayer()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="hud-title" id="hudTitle">SwaraPlay</div>
+          <button class="hud-icon-btn" title="Transmisikan ke Perangkat" onclick="triggerCast()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/><line x1="2" y1="20" x2="2.01" y2="20"/></svg>
+          </button>
+        </div>
+
+        <div class="hud-center">
+          <button class="hud-skip-btn" onclick="skipSeconds(-1)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+            <span id="skipBackLabel">10</span>
+          </button>
+          <button class="hud-play-btn" id="hudPlayBtn" onclick="togglePlayPause()">
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+          </button>
+          <button class="hud-skip-btn" onclick="skipSeconds(1)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+            <span id="skipFwdLabel">10</span>
+          </button>
+        </div>
+
+        <div class="hud-bottom">
+          <div class="timeline-row">
+            <span class="time-label" id="timeCur">0:00</span>
+            <input type="range" class="seek-bar" id="seekBar" min="0" max="1000" value="0" />
+            <span class="time-label right" id="timeDur">0:00</span>
+          </div>
+          <div class="hud-actions" id="hudActionsRow">
+            <button class="hud-action-item" data-ctrl="pip" onclick="togglePiP()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="12" y="9" width="8" height="6" rx="1" fill="currentColor"/></svg>
+              <span>PiP</span>
+            </button>
+            <button class="hud-action-item" data-ctrl="servers" onclick="openPlayerOverlay('servers')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+              <span id="hudServersBtnLabel">Servers</span>
+            </button>
+            <button class="hud-action-item" data-ctrl="subtitles" onclick="openPlayerOverlay('subtitles')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M7 15h4M15 15h2M7 11h2M13 11h4"/></svg>
+              <span>Subtitle</span>
+            </button>
+            <button class="hud-action-item" data-ctrl="episodes" id="hudEpisodesBtn" style="display:none;" onclick="openPlayerOverlay('episodes')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              <span>Episode</span>
+            </button>
+            <button class="hud-action-item" data-ctrl="settings" onclick="openPlayerOverlay('settings')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span>Pengaturan</span>
+            </button>
+            <button class="hud-action-item" data-ctrl="fullscreen" onclick="toggleFullscreen()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+              <span>Layar Penuh</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Servers Bottom Drawer -->
+      <div class="servers-drawer" id="serversDrawer"></div>
+
+      <!-- Full-Screen Frosted Overlay (Subtitles / Settings / Episodes) -->
+      <div class="p-overlay" id="playerOverlay"></div>
+      <input type="file" id="subFileInput" accept=".srt,.vtt" style="display:none;" onchange="handleSubFileUpload(event)" />
+      <input type="file" id="listImportInput" accept=".json" style="display:none;" onchange="handleImportJson(event)" />
+    </div>
+  </div>
+
+  <!-- SCROLL TO TOP & TOAST -->
+  <button class="scroll-top-btn" id="scrollTopBtn" title="Kembali ke atas" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+  </button>
+  <div class="toast" id="toast"></div>
+
+<script>
+// =========================================================================
+// SWARAPLAY v11.3.0 — CINEJOY-GRADE FRONTEND ENGINE
+// =========================================================================
+const DEFAULT_SETTINGS = {
+  theme: "default",
+  episodeStyle: "carousel", // carousel | grid
+  detailType: "modal",      // modal | page
+  useLogos: true,
+  trailers: true,
+  spoilerFree: false,
+  reduceMotion: false,
+  autoplay: true,
+  autoSkipIntro: false,
+  seekSeconds: 10,
+  autoSubtitles: true,
+  defaultSubLang: "Bahasa Indonesia",
+  serverOrder: ["Hexa", "Nexa", "MeowTV", "VidLink", "Cinejoy", "CineSrc", "Videasy", "VidFast", "VidCore", "VidUp", "yFlix", "Byse", "KissKH", "AnimeKai", "MegaPlay"],
+  playerControls: { pip: true, servers: true, subtitles: true, episodes: true, settings: true, fullscreen: true },
+  subNative: false,
+  subPastel: false,
+  subDelay: 0,
+  subFont: "SwaraPlay",     // SwaraPlay | Netflix | Montserrat
+  subSize: 100,
+  subPos: 28,
+  subColor: "#FFFFFF",
+  subBg: true,
+};
+
+const FONT_MAP = {
+  SwaraPlay: '-apple-system, BlinkMacSystemFont, "Inter", sans-serif',
+  Netflix: '"Netflix Sans", "Helvetica Neue", Helvetica, Arial, sans-serif',
+  Montserrat: '"Montserrat", "Segoe UI", sans-serif',
+};
+
+const LANG_FLAGS = {
+  "Bahasa Indonesia": "🇮🇩", "Bahasa Inggris": "🇺🇸", "Bahasa Melayu": "🇲🇾",
+  "Bahasa Jepang": "🇯🇵", "Bahasa Korea": "🇰🇷", "Bahasa Mandarin": "🇨🇳",
+  "Bahasa Arab": "🇸🇦", "Bahasa Prancis": "🇫🇷", "Bahasa Spanyol": "🇪🇸",
+  "Bahasa Jerman": "🇩🇪", "Bahasa Italia": "🇮🇹", "Bahasa Portugis": "🇵🇹",
+  "Bahasa Portugis (Brasil)": "🇧🇷", "Bahasa Rusia": "🇷🇺", "Bahasa Hindi": "🇮🇳",
+  "Bahasa Thailand": "🇹🇭", "Bahasa Vietnam": "🇻🇳", "Bahasa Turki": "🇹🇷",
+  "Bahasa Belanda": "🇳🇱", "Bahasa Polandia": "🇵🇱", "Bahasa Swedia": "🇸🇪",
+};
+
+const S = {
+  route: "home",
+  home: null,
+  heroIdx: 0,
+  heroTimer: null,
+  providerMovie: "netflix",
+  providerSeries: "netflix",
+  providerCache: {},
+  catItems: [],
+  catGenre: "",
+  catPage: 1,
+  searchQuery: "",
+  searchResults: [],
+  searchTimer: null,
+  cwEditing: false,
+  detailItem: null,
+  detailData: null,
+  detailSeason: 1,
+  detailEpQuery: "",
+  settings: loadJson("sp_settings_v113", DEFAULT_SETTINGS),
+  accountKey: localStorage.getItem("sp_account_key") || "",
+  history: loadJson("sp_history_v113", []),
+  lists: loadJson("sp_lists_v113", [{ id: "default", name: "Favorit Saya", items: [] }]),
+  activeListId: "default",
+  listsTab: "my",
+  recentSearches: loadJson("sp_recent_search_v113", []),
+  // Player state
+  playerOpen: false,
+  pItem: null,
+  pSeason: 1,
+  pEpisode: 1,
+  pEpisodes: [],
+  pSources: [],
+  pActiveSrcIdx: 0,
+  pSubtitles: [],
+  pActiveSubIdx: -1,
+  pCues: [],
+  pHls: null,
+  pSpeed: 1,
+  pZoom: "original",
+  pVolumeBoost: 100,
+  pBrightness: 100,
+  pModifyColors: false,
+  pContrast: 100,
+  pSaturate: 100,
+  pSleepMinutes: 0,
+  pSleepEndOfEp: false,
+  pSleepTimeout: null,
+  pAudioCtx: null,
+  pGainNode: null,
+  pHudTimer: null,
+  pSubSearch: "",
+  pSubExpandedLang: null,
+  pSettingsView: "hub", // hub | quality | audio | sleep | playback | subtitle
+};
+
+function loadJson(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return structuredClone ? structuredClone(fallback) : JSON.parse(JSON.stringify(fallback));
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(fallback)) return Array.isArray(parsed) ? parsed : fallback;
+    return { ...fallback, ...parsed };
+  } catch {
+    return JSON.parse(JSON.stringify(fallback));
+  }
+}
+function saveJson(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
+function esc(str) {
+  return String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function showToast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => el.classList.remove("show"), 2600);
+}
+function fmtTime(sec) {
+  if (!isFinite(sec) || sec < 0) return "0:00";
+  const s = Math.floor(sec);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const r = s % 60;
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}` : `${m}:${String(r).padStart(2, "0")}`;
+}
+function fmtLeft(pos, dur) {
+  if (!dur || dur <= 0) return "";
+  const left = Math.max(0, Math.round((dur - pos) / 60));
+  if (left >= 60) return `${Math.floor(left / 60)}j ${left % 60}m tersisa`;
+  return `${left}m tersisa`;
+}
+
+// =========================================================================
+// APPLY SETTINGS TO DOM
+// =========================================================================
+function applySettings() {
+  const st = S.settings;
+  document.body.setAttribute("data-theme", st.theme || "default");
+  document.body.classList.toggle("reduce-motion", !!st.reduceMotion);
+  const root = document.documentElement.style;
+  root.setProperty("--sub-font", FONT_MAP[st.subFont] || FONT_MAP.SwaraPlay);
+  root.setProperty("--sub-size", `${st.subSize || 100}%`);
+  root.setProperty("--sub-size-num", String((st.subSize || 100) / 100));
+  root.setProperty("--sub-color", st.subColor || "#FFFFFF");
+  root.setProperty("--sub-bg", st.subBg ? "rgba(10, 12, 10, 0.68)" : "transparent");
+  root.setProperty("--sub-pos", `${st.subPos ?? 28}px`);
+
+  const subText = document.getElementById("customSubText");
+  if (subText) {
+    subText.classList.toggle("no-bg", !st.subBg);
+    subText.classList.toggle("pastel", !!st.subPastel);
+  }
+  const sk = String(st.seekSeconds || 10);
+  const sb = document.getElementById("skipBackLabel");
+  const sf = document.getElementById("skipFwdLabel");
+  if (sb) sb.textContent = sk;
+  if (sf) sf.textContent = sk;
+
+  const ctrls = st.playerControls || DEFAULT_SETTINGS.playerControls;
+  document.querySelectorAll("#hudActionsRow [data-ctrl]").forEach((btn) => {
+    const k = btn.getAttribute("data-ctrl");
+    if (k === "episodes") return;
+    btn.style.display = ctrls[k] === false ? "none" : "inline-flex";
+  });
+
+  const authLbl = document.getElementById("gearAuthLabel");
+  if (authLbl) authLbl.textContent = S.accountKey ? `Akun (${S.accountKey.slice(0, 4)}••••)` : "Masuk / Akun";
+  saveJson("sp_settings_v113", st);
+}
+
+// =========================================================================
+// NAVIGATION & GEAR MENU
+// =========================================================================
+function toggleGearMenu(e) {
+  if (e) e.stopPropagation();
+  document.getElementById("gearMenu").classList.toggle("open");
+}
+function closeGearMenu() { document.getElementById("gearMenu").classList.remove("open"); }
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("#gearMenu") && !e.target.closest("#gearBtn")) closeGearMenu();
+});
+window.addEventListener("scroll", () => {
+  const btn = document.getElementById("scrollTopBtn");
+  if (btn) btn.classList.toggle("show", window.scrollY > 450 && !S.playerOpen);
+});
+
+function navigate(route, opts = {}) {
+  S.route = route;
+  clearInterval(S.heroTimer);
+  document.querySelectorAll("[data-nav]").forEach((el) => {
+    el.classList.toggle("active", el.getAttribute("data-nav") === route);
+  });
+  window.scrollTo({ top: 0, behavior: "instant" });
+  const hbg = document.getElementById("homeBlurBg");
+  if (hbg) hbg.classList.toggle("active", route === "home");
+  if (route === "home") renderHome();
+  else if (route === "movies") { S.catGenre = opts.genre || ""; S.catPage = 1; renderCategory("movie", "Film"); }
+  else if (route === "series") { S.catGenre = opts.genre || ""; S.catPage = 1; renderCategory("series", "Serial TV"); }
+  else if (route === "lists") renderListsPage();
+  else if (route === "search") renderSearchPage();
+  else if (route === "settings") renderSettingsPage();
+  else if (route === "history") renderHistoryPage();
+  else if (route === "calendar") renderCalendarPage();
+  else if (route === "provider") renderProviderPage(opts.provider || "netflix");
+}
+
+// =========================================================================
+// HOME PAGE
+// =========================================================================
+async function ensureHomeData() {
+  if (S.home) return S.home;
+  const r = await fetch("/api/catalog/home");
+  S.home = await r.json();
+  return S.home;
+}
+
+async function renderHome() {
+  const root = document.getElementById("appRoot");
+  root.innerHTML = `<div style="min-height:100vh;display:grid;place-items:center;color:var(--muted);">Memuat katalog SwaraPlay...</div>`;
+  try {
+    const data = await ensureHomeData();
+    const heroPool = [...(data.movies || []).slice(0, 6), ...(data.series || []).slice(0, 4)].filter((x) => x.backdrop || x.poster);
+    if (!heroPool.length) {
+      root.innerHTML = `<div style="padding:120px 24px;text-align:center;">Gagal memuat katalog. Coba muat ulang halaman.</div>`;
+      return;
+    }
+    const providers = data.providers || [];
+    const lastWatched = S.history[0];
+    const becauseRow = lastWatched ? [...(data.movies || []), ...(data.series || [])].filter((x) => x.id !== lastWatched.id).slice(0, 16) : [];
+
+    root.innerHTML = `
+      <section class="hero" id="heroSection">
+        <img class="hero-bg" id="heroBg" src="" alt="" />
+        <div class="hero-inner">
+          <div class="hero-copy">
+            <div class="hero-logo-wrap" id="heroLogoWrap"></div>
+            <div class="hero-meta" id="heroMeta"></div>
+            <p class="hero-desc" id="heroDesc"></p>
+            <div class="hero-actions" id="heroActions"></div>
+          </div>
+          <div class="hero-dots" id="heroDots">
+            ${heroPool.map((_, i) => `<button class="hero-dot ${i === 0 ? "active" : ""}" onclick="setHeroSlide(${i})"></button>`).join("")}
+          </div>
+        </div>
+      </section>
+
+      <div class="main-container">
+        ${S.history.length ? renderContinueWatchingSection() : ""}
+
+        <section class="section">
+          <div class="section-head">
+            <h2 class="section-title">Jelajahi per Platform</h2>
+          </div>
+          <div class="row-scroll">
+            ${providers.map((p) => `
+              <div class="provider-tile" onclick="navigate('provider', {provider:'${esc(p.id)}'})">
+                <div class="provider-box" style="color:${esc(p.color)}">${esc(p.short)}</div>
+                <div class="provider-name">${esc(p.name)}</div>
+              </div>
+            `).join("")}
+          </div>
+        </section>
+
+        ${becauseRow.length ? renderMediaRow(`Karena kamu menonton ${lastWatched.title}`, becauseRow) : ""}
+        ${renderMediaRow("Film Trending", (data.movies || []).slice(0, 20), "movies")}
+        ${renderMediaRow("Serial Trending", (data.series || []).slice(0, 20), "series")}
+
+        <section class="section">
+          <div class="section-head">
+            <div class="section-title">
+              <span>Film di</span>
+              <select class="provider-inline-select" onchange="switchInlineProvider('movie', this.value)">
+                ${providers.map((p) => `<option value="${esc(p.id)}" ${p.id === S.providerMovie ? "selected" : ""}>${esc(p.name)}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+          <div class="row-scroll" id="inlineProvMovieRow"><div style="color:var(--muted);padding:12px;">Memuat...</div></div>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <div class="section-title">
+              <span>Serial TV di</span>
+              <select class="provider-inline-select" onchange="switchInlineProvider('series', this.value)">
+                ${providers.map((p) => `<option value="${esc(p.id)}" ${p.id === S.providerSeries ? "selected" : ""}>${esc(p.name)}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+          <div class="row-scroll" id="inlineProvSeriesRow"><div style="color:var(--muted);padding:12px;">Memuat...</div></div>
+        </section>
+
+        ${renderMediaRow("Film Pemenang Penghargaan", data.awardMovies || [])}
+        ${renderMediaRow("Serial Pemenang Penghargaan", data.awardShows || [])}
+        ${renderMediaRow("Film Rating Tertinggi", (data.topMovies || []).slice(0, 20), "movies")}
+        ${renderMediaRow("Serial Rating Tertinggi", (data.topSeries || []).slice(0, 20), "series")}
+        ${renderMediaRow("Nominasi Oscar Film Terbaik", data.oscarNominees || [])}
+      </div>
+    `;
+
+    window.__heroPool = heroPool;
+    S.heroIdx = 0;
+    paintHeroSlide(0);
+    S.heroTimer = setInterval(() => {
+      if (S.route !== "home" || S.playerOpen) return;
+      S.heroIdx = (S.heroIdx + 1) % heroPool.length;
+      paintHeroSlide(S.heroIdx);
+    }, 6500);
+
+    switchInlineProvider("movie", S.providerMovie);
+    switchInlineProvider("series", S.providerSeries);
+  } catch (err) {
+    root.innerHTML = `<div style="padding:120px 24px;text-align:center;">Gagal memuat: ${esc(err.message)}</div>`;
+  }
+}
+
+function setHeroSlide(idx) {
+  S.heroIdx = idx;
+  paintHeroSlide(idx);
+}
+
+function paintHeroSlide(idx) {
+  const pool = window.__heroPool || [];
+  const item = pool[idx];
+  if (!item) return;
+  const bg = document.getElementById("heroBg");
+  const bgUrl = item.backdrop || item.poster;
+  if (bg) bg.src = bgUrl;
+  const hbg = document.getElementById("homeBlurBg");
+  if (hbg && bgUrl) {
+    hbg.style.backgroundImage = `url("${bgUrl}")`;
+    if (S.route === "home") hbg.classList.add("active");
+  }
+
+  const logoWrap = document.getElementById("heroLogoWrap");
+  if (logoWrap) {
+    if (S.settings.useLogos && item.logoUrl) {
+      logoWrap.innerHTML = `<img class="hero-logo-img" src="${esc(item.logoUrl)}" alt="${esc(item.title)}" onerror="this.outerHTML='<h1 class=\\'hero-title\\'>${esc(item.title).replace(/'/g, "\\'")}</h1>'" />`;
+    } else {
+      logoWrap.innerHTML = `<h1 class="hero-title">${esc(item.title)}</h1>`;
+    }
+  }
+
+  const hist = S.history.find((h) => h.id === item.id);
+  const leftStr = hist ? fmtLeft(hist.position, hist.duration) : "";
+  const meta = document.getElementById("heroMeta");
+  if (meta) {
+    meta.innerHTML = `
+      ${item.rating ? `<span class="rating">★ ${esc(item.rating)}</span>` : ""}
+      ${item.year ? `<span>${esc(item.year)}</span>` : ""}
+      ${(item.genres || []).slice(0, 2).map((g) => `<span>• ${esc(g)}</span>`).join("")}
+      ${leftStr ? `<span style="color:var(--brand-green)">• ${esc(leftStr)}</span>` : ""}
+    `;
+  }
+  const desc = document.getElementById("heroDesc");
+  if (desc) desc.textContent = item.overview || "Streaming kualitas HD dengan subtitle Bahasa Indonesia.";
+
+  const saved = isItemSaved(item.id);
+  const act = document.getElementById("heroActions");
+  if (act) {
+    act.innerHTML = `
+      <button class="btn-play" onclick="quickPlayItem(${idx}, 'hero')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+        <span>${hist ? "Lanjutkan" : "Putar"}</span>
+      </button>
+      <button class="btn-circle ${saved ? "saved" : ""}" title="Daftar Saya" onclick="toggleQuickSaveHero(${idx})">
+        ${saved ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="20 6 9 17 4 12"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'}
+      </button>
+      <button class="btn-circle" title="Info Detail" onclick="openDetail(window.__heroPool[${idx}])">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      </button>
+    `;
+  }
+  document.querySelectorAll("#heroDots .hero-dot").forEach((d, i) => d.classList.toggle("active", i === idx));
+}
+
+function quickPlayItem(idx, source) {
+  const item = source === "hero" ? (window.__heroPool || [])[idx] : null;
+  if (!item) return;
+  const hist = S.history.find((h) => h.id === item.id);
+  startPlayback(item, hist?.season || 1, hist?.episode || 1, [], hist?.position || 0);
+}
+function toggleQuickSaveHero(idx) {
+  const item = (window.__heroPool || [])[idx];
+  if (!item) return;
+  toggleSaveItem(item);
+  paintHeroSlide(idx);
+}
+
+function renderContinueWatchingSection() {
+  return `
+    <section class="section ${S.cwEditing ? "cw-editing" : ""}" id="cwSection">
+      <div class="section-head">
+        <button class="section-title-btn" onclick="navigate('history')">
+          <span>Lanjutkan Menonton</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="nav-icon-btn" title="Edit Riwayat" onclick="toggleCwEdit()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </button>
+      </div>
+      <div class="row-scroll">
+        ${S.history.slice(0, 14).map((h, i) => {
+          const pct = h.duration > 0 ? Math.min(98, Math.max(4, Math.round((h.position / h.duration) * 100))) : 12;
+          const epTxt = h.category !== "MOVIE" ? `S${h.season || 1} E${h.episode || 1} • ` : "";
+          return `
+            <div class="cw-card" onclick="openCwPopup(${i})">
+              <div class="cw-thumb-wrap">
+                <img class="cw-thumb" src="${esc(h.backdrop || h.poster)}" alt="${esc(h.title)}" loading="lazy" />
+                <button class="cw-remove" onclick="event.stopPropagation(); removeHistoryItem('${esc(h.id)}')">✕</button>
+                <div class="cw-progress-track"><div class="cw-progress-fill" style="width:${pct}%"></div></div>
+              </div>
+              <div class="cw-meta">
+                <div class="cw-title">${esc(h.title)}</div>
+                <div class="cw-sub">${epTxt}${fmtLeft(h.position, h.duration) || "Lanjutkan"}</div>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function toggleCwEdit() {
+  S.cwEditing = !S.cwEditing;
+  const el = document.getElementById("cwSection");
+  if (el) el.classList.toggle("cw-editing", S.cwEditing);
+}
+function removeHistoryItem(id) {
+  S.history = S.history.filter((x) => x.id !== id);
+  saveJson("sp_history_v113", S.history);
+  if (S.route === "home") renderHome();
+  else if (S.route === "history") renderHistoryPage();
+}
+
+function openCwPopup(idx) {
+  const h = S.history[idx];
+  if (!h) return;
+  const pct = h.duration > 0 ? Math.min(98, Math.max(4, Math.round((h.position / h.duration) * 100))) : 12;
+  const epTxt = h.category !== "MOVIE" ? `Musim ${h.season || 1} Episode ${h.episode || 1} • ` : "";
+  const saved = isItemSaved(h.id);
+  document.getElementById("cwPopupCard").innerHTML = `
+    <img class="cw-popup-img" src="${esc(h.backdrop || h.poster)}" alt="${esc(h.title)}" />
+    <button class="cw-popup-close" onclick="closeCwPopup()">✕</button>
+    <div class="cw-popup-body">
+      <div class="cw-popup-title">${esc(h.title)}</div>
+      <div class="cw-popup-sub">${epTxt}${fmtLeft(h.position, h.duration) || "Siap dilanjutkan"}</div>
+      <div class="cw-popup-bar"><div style="width:${pct}%"></div></div>
+      <div class="cw-popup-actions">
+        <button class="btn-play" onclick="closeCwPopup(); startPlayback(S.history[${idx}], ${h.season || 1}, ${h.episode || 1}, [], ${h.position || 0})">▶ Lanjutkan</button>
+        <button class="cw-popup-info" onclick="closeCwPopup(); openDetail(S.history[${idx}])">ⓘ Info</button>
+        <button class="btn-circle ${saved ? "saved" : ""}" style="width:40px;height:40px;" onclick="toggleSaveItem(S.history[${idx}]); openCwPopup(${idx});">${saved ? "✓" : "+"}</button>
+      </div>
+    </div>
+  `;
+  document.getElementById("cwPopup").classList.add("open");
+}
+function closeCwPopup() { document.getElementById("cwPopup").classList.remove("open"); }
+
+const __itemRegistry = new Map();
+function regItem(item) {
+  const k = `${item.category || "M"}_${item.id}`;
+  __itemRegistry.set(k, item);
+  return k;
+}
+function openByReg(k) {
+  const it = __itemRegistry.get(k);
+  if (it) openDetail(it);
+}
+
+function renderCardHtml(item) {
+  if (!item || !item.poster) return "";
+  const k = regItem(item);
+  return `
+    <div class="card" onclick="openByReg('${esc(k)}')">
+      <div class="card-poster-wrap">
+        <img class="card-poster" src="${esc(item.poster)}" alt="${esc(item.title)}" loading="lazy" onerror="this.closest('.card').style.display='none'" />
+        ${item.rating ? `<span class="card-badge">★ ${esc(item.rating)}</span>` : ""}
+      </div>
+      <div class="card-title">${esc(item.title)}</div>
+      <div class="card-sub">${esc(item.year || "")}${item.year ? " • " : ""}${item.category === "MOVIE" ? "Film" : "Serial"}</div>
+    </div>
+  `;
+}
+
+function renderMediaRow(title, items, moreRoute = "") {
+  const clean = (items || []).filter((x) => x && x.poster);
+  if (!clean.length) return "";
+  return `
+    <section class="section">
+      <div class="section-head">
+        ${moreRoute
+          ? `<button class="section-title-btn" onclick="navigate('${moreRoute}')"><span>${esc(title)}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg></button>`
+          : `<h2 class="section-title">${esc(title)}</h2>`
+        }
+      </div>
+      <div class="row-scroll">${clean.map(renderCardHtml).join("")}</div>
+    </section>
+  `;
+}
+
+async function switchInlineProvider(type, providerId) {
+  if (type === "movie") S.providerMovie = providerId;
+  else S.providerSeries = providerId;
+  const el = document.getElementById(type === "movie" ? "inlineProvMovieRow" : "inlineProvSeriesRow");
+  if (!el) return;
+  const cacheKey = `${providerId}_${type}`;
+  if (!S.providerCache[cacheKey]) {
+    el.innerHTML = `<div style="color:var(--muted);padding:12px;">Memuat katalog...</div>`;
+    try {
+      const r = await fetch(`/api/catalog/provider?provider=${encodeURIComponent(providerId)}&type=${type}`);
+      const j = await r.json();
+      S.providerCache[cacheKey] = j.items || [];
+    } catch { S.providerCache[cacheKey] = []; }
+  }
+  const items = S.providerCache[cacheKey];
+  el.innerHTML = items.length ? items.map(renderCardHtml).join("") : `<div style="color:var(--muted);padding:12px;">Tidak ada konten tersedia.</div>`;
+}
+
+async function renderProviderPage(providerId) {
+  const data = await ensureHomeData();
+  const prov = (data.providers || []).find((p) => p.id === providerId) || { id: providerId, name: providerId };
+  const root = document.getElementById("appRoot");
+  root.innerHTML = `<div class="ambient-page" style="padding:102px 28px 90px;"><div style="max-width:1340px;margin:0 auto;"><h1 style="font-size:30px;font-weight:900;margin-bottom:24px;">${esc(prov.name)}</h1><div style="color:var(--muted);">Memuat film & serial di ${esc(prov.name)}...</div></div></div>`;
+  const [mRes, sRes] = await Promise.all([
+    fetch(`/api/catalog/provider?provider=${encodeURIComponent(providerId)}&type=movie`).then((r) => r.json()).catch(() => ({ items: [] })),
+    fetch(`/api/catalog/provider?provider=${encodeURIComponent(providerId)}&type=series`).then((r) => r.json()).catch(() => ({ items: [] })),
+  ]);
+  root.innerHTML = `
+    <div class="ambient-page" style="padding:102px 28px 90px;">
+      <div style="max-width:1340px;margin:0 auto;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:26px;">
+          <button class="btn-circle" onclick="navigate('home')">←</button>
+          <h1 style="font-size:30px;font-weight:900;">${esc(prov.name)}</h1>
+        </div>
+        ${renderMediaRow(`Film di ${prov.name}`, mRes.items || [])}
+        ${renderMediaRow(`Serial TV di ${prov.name}`, sRes.items || [])}
+      </div>
+    </div>
+  `;
+}
+
+// =========================================================================
+// CATEGORY PAGES (MOVIES / SERIES)
+// =========================================================================
+const GENRES_LIST = ["Semua", "Action", "Sci-Fi", "Horror", "Comedy", "Animation", "Thriller", "Fantasy", "Romance", "Crime", "Drama"];
+async function renderCategory(cat, label) {
+  const root = document.getElementById("appRoot");
+  root.innerHTML = `
+    <div style="padding:98px 28px 90px;max-width:1380px;margin:0 auto;">
+      <h1 style="font-size:28px;font-weight:900;margin-bottom:16px;">${esc(label)} Populer</h1>
+      <div class="chips-row">
+        ${GENRES_LIST.map((g) => {
+          const val = g === "Semua" ? "" : g;
+          return `<button class="chip ${S.catGenre === val ? "active" : ""}" onclick="S.catGenre='${val}'; S.catPage=1; renderCategory('${cat}','${label}')">${esc(g)}</button>`;
+        }).join("")}
+      </div>
+      <div class="poster-grid" id="catGrid">${Array(14).fill('<div class="skeleton-card"></div>').join("")}</div>
+      <div style="text-align:center;margin-top:28px;">
+        <button class="chip" id="catMoreBtn" style="display:none;padding:11px 28px;" onclick="loadMoreCategory('${cat}')">Muat Lebih Banyak</button>
+      </div>
+    </div>
+  `;
+  const r = await fetch(`/api/catalog/category?cat=${cat}&genre=${encodeURIComponent(S.catGenre)}&page=1`);
+  const j = await r.json();
+  S.catItems = (j.items || []).filter((x) => x.poster);
+  document.getElementById("catGrid").innerHTML = S.catItems.map(renderCardHtml).join("") || `<div style="color:var(--muted);">Tidak ada judul ditemukan.</div>`;
+  const btn = document.getElementById("catMoreBtn");
+  if (btn) btn.style.display = j.hasMore ? "inline-block" : "none";
+}
+
+async function loadMoreCategory(cat) {
+  S.catPage += 1;
+  const r = await fetch(`/api/catalog/category?cat=${cat}&genre=${encodeURIComponent(S.catGenre)}&page=${S.catPage}`);
+  const j = await r.json();
+  const next = (j.items || []).filter((x) => x.poster);
+  S.catItems = [...S.catItems, ...next];
+  document.getElementById("catGrid").insertAdjacentHTML("beforeend", next.map(renderCardHtml).join(""));
+  const btn = document.getElementById("catMoreBtn");
+  if (btn && !j.hasMore) btn.style.display = "none";
+}
+
+// =========================================================================
+// DEDICATED SEARCH PAGE (AMBIENT MESH + LIVE SEARCH + TRENDING TODAY)
+// =========================================================================
+async function renderSearchPage() {
+  const data = await ensureHomeData();
+  const trending = [...(data.movies || []).slice(0, 10), ...(data.series || []).slice(0, 6)].filter((x) => x.poster);
+  const headlines = ["Siap untuk petualangan?", "Cari tontonan malam ini", "Mau nonton apa hari ini?"];
+  const hl = headlines[Math.floor(Date.now() / 60000) % headlines.length];
+
+  document.getElementById("appRoot").innerHTML = `
+    <div class="ambient-page search-page">
+      <div style="max-width:1320px;margin:0 auto;">
+        <div class="search-hero-box">
+          <h1 class="search-headline">${esc(hl)}</h1>
+          <div class="search-input-bar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="opacity:.7"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="searchPageInput" type="text" placeholder="Cari film, serial TV, anime, atau drama..." value="${esc(S.searchQuery)}" oninput="onSearchInput(this.value)" onkeydown="if(event.key==='Enter') runLiveSearch(this.value, true)" autofocus />
+            <button id="searchClearBtn" style="display:${S.searchQuery ? "grid" : "none"};place-items:center;font-size:18px;opacity:.75;" onclick="onSearchInput('')">✕</button>
+          </div>
+          <div class="recent-chips" id="recentChipsWrap">${renderRecentChipsHtml()}</div>
+        </div>
+        <div id="searchResultsArea">
+          ${S.searchQuery ? "" : renderMediaRow("Trending Hari Ini", trending)}
+        </div>
+      </div>
+    </div>
+  `;
+  if (S.searchQuery) runLiveSearch(S.searchQuery, false);
+}
+
+function renderRecentChipsHtml() {
+  return S.recentSearches.slice(0, 6).map((q, i) => `
+    <div class="recent-chip">
+      <span onclick="document.getElementById('searchPageInput').value='${esc(q).replace(/'/g, "\\'")}'; runLiveSearch('${esc(q).replace(/'/g, "\\'")}', false)">${esc(q)}</span>
+      <button onclick="S.recentSearches.splice(${i},1); saveJson('sp_recent_search_v113', S.recentSearches); document.getElementById('recentChipsWrap').innerHTML=renderRecentChipsHtml();">×</button>
+    </div>
+  `).join("");
+}
+
+function onSearchInput(val) {
+  S.searchQuery = val;
+  const inp = document.getElementById("searchPageInput");
+  if (inp && inp.value !== val) inp.value = val;
+  const clr = document.getElementById("searchClearBtn");
+  if (clr) clr.style.display = val ? "grid" : "none";
+  clearTimeout(S.searchTimer);
+  if (!val.trim()) {
+    const trending = [...(S.home?.movies || []).slice(0, 10), ...(S.home?.series || []).slice(0, 6)];
+    document.getElementById("searchResultsArea").innerHTML = renderMediaRow("Trending Hari Ini", trending);
+    return;
+  }
+  S.searchTimer = setTimeout(() => runLiveSearch(val, false), 340);
+}
+
+async function runLiveSearch(q, saveHistory) {
+  const clean = String(q || "").trim();
+  if (!clean) return;
+  S.searchQuery = clean;
+  if (saveHistory) {
+    S.recentSearches = [clean, ...S.recentSearches.filter((x) => x.toLowerCase() !== clean.toLowerCase())].slice(0, 8);
+    saveJson("sp_recent_search_v113", S.recentSearches);
+    const rc = document.getElementById("recentChipsWrap");
+    if (rc) rc.innerHTML = renderRecentChipsHtml();
+  }
+  const area = document.getElementById("searchResultsArea");
+  if (!area) return;
+  area.innerHTML = `<div class="poster-grid">${Array(12).fill('<div class="skeleton-card"></div>').join("")}</div>`;
+  try {
+    const r = await fetch(`/api/search?q=${encodeURIComponent(clean)}`);
+    const j = await r.json();
+    const list = (j.results || []).filter((x) => x && x.poster);
+    if (!S.recentSearches.some((x) => x.toLowerCase() === clean.toLowerCase()) && list.length) {
+      S.recentSearches = [clean, ...S.recentSearches].slice(0, 8);
+      saveJson("sp_recent_search_v113", S.recentSearches);
+      const rc = document.getElementById("recentChipsWrap");
+      if (rc) rc.innerHTML = renderRecentChipsHtml();
+    }
+    area.innerHTML = list.length
+      ? `<div class="poster-grid">${list.map(renderCardHtml).join("")}</div>`
+      : `<div style="text-align:center;color:var(--muted);padding:48px 0;">Tidak ada hasil yang cocok untuk "${esc(clean)}".</div>`;
+  } catch {
+    area.innerHTML = `<div style="text-align:center;color:var(--muted);padding:48px 0;">Gagal mencari. Coba lagi.</div>`;
+  }
+}
+
+// =========================================================================
+// DETAIL MODAL / FULL PAGE + SEASON WHEEL PICKER + EPISODE SEARCH
+// =========================================================================
+async function openDetail(item) {
+  if (!item) return;
+  S.detailItem = item;
+  S.detailData = null;
+  S.detailSeason = 1;
+  S.detailEpQuery = "";
+  const overlay = document.getElementById("detailOverlay");
+  overlay.classList.toggle("fullpage-mode", S.settings.detailType === "page");
+  overlay.classList.add("open");
+  overlay.scrollTop = 0;
+
+  // Pre-warm stream in background for instant playback!
+  fetch(`/api/resolve?id=${encodeURIComponent(item.id || "")}&imdbId=${encodeURIComponent(item.imdbId || "")}&title=${encodeURIComponent(item.title || "")}&year=${encodeURIComponent(item.year || "")}&category=${encodeURIComponent(item.category || "MOVIE")}&season=1&episode=1`).catch(() => {});
+
+  renderDetailShell();
+  try {
+    const r = await fetch(`/api/detail?id=${encodeURIComponent(item.id || "")}&category=${encodeURIComponent(item.category || "MOVIE")}&title=${encodeURIComponent(item.title || "")}&totalEpisodes=${item.totalEpisodes || 12}`);
+    S.detailData = await r.json();
+    const seasons = getDetailSeasons();
+    if (seasons.length) S.detailSeason = seasons[0];
+    renderDetailShell();
+  } catch {}
+}
+
+function closeDetail() {
+  document.getElementById("detailOverlay").classList.remove("open");
+}
+
+function getDetailSeasons() {
+  const eps = S.detailData?.episodes || [];
+  return [...new Set(eps.map((e) => Number(e.season) || 1))].sort((a, b) => a - b);
+}
+
+function getSeasonLabel(sNum) {
+  const custom = S.detailData?.seasonNames?.[String(sNum)];
+  return custom && custom !== `Season ${sNum}` ? `${custom}` : `Musim ${sNum}`;
+}
+
+function renderDetailShell() {
+  const item = S.detailItem;
+  if (!item) return;
+  const d = S.detailData || {};
+  const isPage = S.settings.detailType === "page";
+  const logoUrl = d.logoUrl || item.logoUrl || "";
+  const saved = isItemSaved(item.id);
+  const hist = S.history.find((h) => h.id === item.id);
+  const eps = d.episodes || [];
+  const seasons = getDetailSeasons();
+  const seasonEps = eps.filter((e) => (Number(e.season) || 1) === S.detailSeason);
+  const filteredEps = S.detailEpQuery.trim()
+    ? seasonEps.filter((e) => `${e.episode} ${e.title || ""} ${e.overview || ""}`.toLowerCase().includes(S.detailEpQuery.trim().toLowerCase()))
+    : seasonEps;
+  const similar = (d.similar && d.similar.length ? d.similar : (item.category === "MOVIE" ? S.home?.movies : S.home?.series) || []).filter((x) => x.id !== item.id).slice(0, 12);
+
+  document.getElementById("detailShell").innerHTML = `
+    <div class="detail-hero">
+      <img class="detail-hero-bg" src="${esc(item.backdrop || item.poster)}" alt="${esc(item.title)}" />
+      ${isPage ? `<button class="detail-back-btn" onclick="closeDetail()">← Kembali</button>` : ""}
+      <button class="detail-close-btn" onclick="closeDetail()">✕</button>
+      <div class="detail-hero-content">
+        <div class="hero-logo-wrap">
+          ${S.settings.useLogos && logoUrl
+            ? `<img class="hero-logo-img" src="${esc(logoUrl)}" alt="${esc(item.title)}" onerror="this.outerHTML='<h1 class=\\'hero-title\\'>${esc(item.title).replace(/'/g, "\\'")}</h1>'" />`
+            : `<h1 class="hero-title">${esc(item.title)}</h1>`
+          }
+        </div>
+        <div class="hero-actions" style="margin-top:14px;">
+          <button class="btn-play" onclick="playFromDetail(${hist?.season || S.detailSeason}, ${hist?.episode || 1})">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+            <span>${hist ? "Lanjutkan" : "Putar"}</span>
+          </button>
+          <button class="btn-circle ${saved ? "saved" : ""}" title="Simpan ke Daftar Saya" onclick="toggleSaveItem(S.detailItem); renderDetailShell();">
+            ${saved ? "✓" : "+"}
+          </button>
+          <button class="btn-circle" title="Bagikan" onclick="shareDetailItem()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-body">
+      <div class="detail-cols">
+        <div>
+          <div class="detail-meta-pills">
+            ${item.year ? `<span>${esc(item.year)}</span>` : ""}
+            ${d.runtime ? `<span>• ${esc(d.runtime)}</span>` : ""}
+            ${d.certification ? `<span class="meta-tag">${esc(d.certification)}</span>` : ""}
+            ${item.rating ? `<span style="color:var(--gold)">★ ${esc(item.rating)}</span>` : ""}
+            <span class="meta-tag">HD</span>
+            <span class="meta-tag">CC</span>
+          </div>
+          <p class="detail-overview">${esc(d.overview || item.overview || "Memuat deskripsi...")}</p>
+        </div>
+        <div class="detail-cast-box">
+          ${(d.cast && d.cast.length) ? `
+            <div><strong>Pemeran:</strong> ${d.cast.slice(0, 6).map((c) => esc(c.name)).join(", ")}</div>
+            <div class="cast-strip">
+              ${d.cast.slice(0, 8).map((c) => `
+                <div class="cast-item">
+                  <img class="cast-photo" src="${esc(c.photo || "/logo.png")}" alt="${esc(c.name)}" onerror="this.src='/logo.png'" />
+                  <div class="cast-name">${esc(c.name)}</div>
+                </div>
+              `).join("")}
+            </div>
+          ` : `<div><strong>Genre:</strong> ${esc((item.genres || []).join(", ") || "Hiburan")}</div>`}
+        </div>
+      </div>
+
+      ${eps.length ? `
+        <div class="section">
+          <div class="ep-toolbar">
+            <button class="season-trigger" onclick="openSeasonWheel()">
+              <span>${esc(getSeasonLabel(S.detailSeason))}</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <input class="ep-search-input" type="text" placeholder="🔍 Cari episode..." value="${esc(S.detailEpQuery)}" oninput="S.detailEpQuery=this.value; renderDetailShell();" />
+          </div>
+          ${(!S.detailEpQuery.trim() && filteredEps.length > 50) ? (() => {
+            const pageSize = 50;
+            const totalPages = Math.ceil(filteredEps.length / pageSize);
+            S.detailEpPage = Math.min(S.detailEpPage || 0, totalPages - 1);
+            return `<div class="chips-row" style="margin-bottom:10px;">
+              ${Array.from({ length: totalPages }, (_, pi) => {
+                const a = pi * pageSize + 1;
+                const b = Math.min((pi + 1) * pageSize, filteredEps.length);
+                return `<button class="chip ${pi === S.detailEpPage ? "active" : ""}" onclick="S.detailEpPage=${pi}; renderDetailShell();">Ep ${a}–${b}</button>`;
+              }).join("")}
+            </div>`;
+          })() : ""}
+          <div class="${S.settings.episodeStyle === "grid" ? "ep-grid" : "ep-carousel"}">
+            ${((!S.detailEpQuery.trim() && filteredEps.length > 50) ? filteredEps.slice((S.detailEpPage || 0) * 50, ((S.detailEpPage || 0) + 1) * 50) : filteredEps).map((ep) => {
+              const thumb = ep.thumbnail || item.backdrop || item.poster;
+              const blurCls = S.settings.spoilerFree ? "spoiler-blur" : "";
+              return `
+                <div class="ep-card" onclick="playFromDetail(${ep.season}, ${ep.episode})">
+                  <div class="ep-thumb-wrap">
+                    <img class="ep-thumb ${blurCls}" src="${esc(thumb)}" alt="${esc(ep.title)}" loading="lazy" />
+                    <span class="ep-num-badge">E${ep.episode}</span>
+                    ${ep.runtime ? `<span class="ep-dur-badge">${esc(ep.runtime)}</span>` : ""}
+                  </div>
+                  <div class="ep-info">
+                    <div class="ep-title">${S.settings.spoilerFree ? `Episode ${ep.episode}` : esc(ep.title || `Episode ${ep.episode}`)}</div>
+                    <div class="ep-desc">${S.settings.spoilerFree ? "Deskripsi disembunyikan (Mode Bebas Spoiler)" : esc(ep.overview || `Musim ${ep.season} • Episode ${ep.episode}`)}</div>
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      ` : ""}
+
+      ${(S.settings.trailers && d.trailerYoutubeId) ? `
+        <div class="section">
+          <h3 class="section-title" style="margin-bottom:12px;">Trailer Resmi</h3>
+          <div style="position:relative;max-width:560px;aspect-ratio:16/9;border-radius:16px;overflow:hidden;border:1px solid var(--glass-border);">
+            <iframe src="https://www.youtube.com/embed/${esc(d.trailerYoutubeId)}" style="width:100%;height:100%;border:0;" allowfullscreen loading="lazy"></iframe>
+          </div>
+        </div>
+      ` : ""}
+
+      ${similar.length ? renderMediaRow("Mungkin Kamu Suka", similar) : ""}
+    </div>
+  `;
+}
+
+function playFromDetail(season, episode) {
+  const item = S.detailItem;
+  const eps = S.detailData?.episodes || [];
+  closeDetail();
+  startPlayback(item, season, episode, eps, 0);
+}
+
+function openSeasonWheel() {
+  const seasons = getDetailSeasons();
+  document.getElementById("seasonWheelList").innerHTML = seasons.map((s) => `
+    <button class="wheel-item ${s === S.detailSeason ? "active" : ""}" onclick="S.detailSeason=${s}; S.detailEpQuery=''; closeSeasonWheel(); renderDetailShell();">${esc(getSeasonLabel(s))}</button>
+  `).join("");
+  document.getElementById("seasonWheel").classList.add("open");
+}
+function closeSeasonWheel() { document.getElementById("seasonWheel").classList.remove("open"); }
+
+function shareDetailItem() {
+  const url = location.origin;
+  if (navigator.share) navigator.share({ title: S.detailItem?.title || "SwaraPlay", url }).catch(() => {});
+  else { navigator.clipboard?.writeText(`${S.detailItem?.title} — ${url}`); showToast("Tautan disalin ke clipboard"); }
+}
+
+// =========================================================================
+// MY LISTS, HISTORY, CALENDAR & 16-DIGIT ACCOUNT
+// =========================================================================
+function isItemSaved(id) {
+  return S.lists.some((l) => (l.items || []).some((x) => x.id === id));
+}
+function toggleSaveItem(item) {
+  if (!item) return;
+  let list = S.lists.find((l) => l.id === S.activeListId) || S.lists[0];
+  if (!list) { list = { id: "default", name: "Favorit Saya", items: [] }; S.lists.push(list); }
+  const idx = list.items.findIndex((x) => x.id === item.id);
+  if (idx >= 0) { list.items.splice(idx, 1); showToast(`Dihapus dari ${list.name}`); }
+  else { list.items.unshift(item); showToast(`Disimpan ke ${list.name}`); }
+  saveJson("sp_lists_v113", S.lists);
+}
+
+function renderListsPage() {
+  const activeList = S.lists.find((l) => l.id === S.activeListId) || S.lists[0];
+  const hasAny = S.lists.some((l) => (l.items || []).length > 0);
+  const discover = [...(S.home?.awardMovies || []).slice(0, 12), ...(S.home?.awardShows || []).slice(0, 12)];
+
+  document.getElementById("appRoot").innerHTML = `
+    <div class="ambient-page lists-page">
+      <div class="lists-inner">
+        <div class="lists-tabs">
+          <button class="lists-tab ${S.listsTab === "my" ? "active" : ""}" onclick="S.listsTab='my'; renderListsPage();">Daftar Saya</button>
+          <button class="lists-tab ${S.listsTab === "discover" ? "active" : ""}" onclick="S.listsTab='discover'; renderListsPage();">Jelajahi</button>
+        </div>
+        ${S.listsTab === "discover"
+          ? `<div class="poster-grid">${discover.map(renderCardHtml).join("")}</div>`
+          : (!hasAny && S.lists.length <= 1) ? `
+            <div class="lists-empty-box">
+              <div class="dashed-plus" onclick="createNewList()">+</div>
+              <h2 style="font-size:21px;font-weight:800;margin-bottom:8px;">Buat daftar pertamamu</h2>
+              <p style="font-size:13.5px;color:var(--muted);margin-bottom:22px;">Simpan film dan serial favoritmu, atau kelompokkan daftar tontonan sesuai selera.</p>
+              <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+                <button class="btn-play" style="padding:10px 20px;font-size:13.5px;" onclick="createNewList()">+ Daftar Baru</button>
+                <button class="chip" onclick="document.getElementById('listImportInput').click()">↑ Impor File</button>
+              </div>
+            </div>
+          ` : `
+            <div class="lists-bar">
+              <div class="chips-row" style="padding-bottom:0;">
+                ${S.lists.map((l) => `<button class="chip ${l.id === activeList.id ? "active" : ""}" onclick="S.activeListId='${esc(l.id)}'; renderListsPage();">${esc(l.name)} (${(l.items || []).length})</button>`).join("")}
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="chip" onclick="createNewList()">+ Daftar Baru</button>
+                <button class="chip" onclick="document.getElementById('listImportInput').click()">↑ Impor</button>
+                <button class="chip" onclick="exportAllDataJson()">↓ Ekspor JSON</button>
+              </div>
+            </div>
+            <div class="poster-grid">
+              ${(activeList.items || []).length ? activeList.items.map(renderCardHtml).join("") : `<div style="color:var(--muted);padding:30px 0;">Daftar "${esc(activeList.name)}" masih kosong.</div>`}
+            </div>
+          `
+        }
+      </div>
+    </div>
+  `;
+}
+
+function createNewList() {
+  const name = prompt("Nama daftar baru (contoh: Tontonan Akhir Pekan):");
+  if (!name || !name.trim()) return;
+  const id = "list_" + Date.now();
+  S.lists.push({ id, name: name.trim(), items: [] });
+  S.activeListId = id;
+  saveJson("sp_lists_v113", S.lists);
+  renderListsPage();
+  showToast(`Daftar "${name.trim()}" dibuat`);
+}
+
+function exportAllDataJson() {
+  const blob = new Blob([JSON.stringify({ accountKey: S.accountKey, lists: S.lists, history: S.history, settings: S.settings }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "swaraplay-backup.json";
+  a.click();
+  showToast("Cadangan data diekspor");
+}
+
+function handleImportJson(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(String(reader.result || "{}"));
+      if (Array.isArray(parsed.lists)) { S.lists = parsed.lists; saveJson("sp_lists_v113", S.lists); }
+      if (Array.isArray(parsed.history)) { S.history = parsed.history; saveJson("sp_history_v113", S.history); }
+      if (parsed.settings) { S.settings = { ...DEFAULT_SETTINGS, ...parsed.settings }; applySettings(); }
+      showToast("Data berhasil diimpor!");
+      if (S.route === "lists") renderListsPage();
+      else if (S.route === "settings") renderSettingsPage();
+    } catch { showToast("File JSON tidak valid"); }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+}
+
+function renderHistoryPage() {
+  document.getElementById("appRoot").innerHTML = `
+    <div class="ambient-page" style="padding:104px 28px 90px;">
+      <div style="max-width:1280px;margin:0 auto;">
+        <div class="lists-bar">
+          <h1 style="font-size:28px;font-weight:900;">Riwayat Tontonan (${S.history.length})</h1>
+          ${S.history.length ? `<button class="chip" onclick="S.history=[]; saveJson('sp_history_v113',[]); renderHistoryPage(); showToast('Riwayat dibersihkan');">Hapus Semua</button>` : ""}
+        </div>
+        ${S.history.length
+          ? `<div class="poster-grid">${S.history.map(renderCardHtml).join("")}</div>`
+          : `<div style="color:var(--muted);padding:48px 0;text-align:center;">Belum ada riwayat tontonan.</div>`
+        }
+      </div>
+    </div>
+  `;
+}
+
+async function renderCalendarPage() {
+  const root = document.getElementById("appRoot");
+  root.innerHTML = `<div class="ambient-page" style="padding:104px 28px 90px;"><div style="max-width:1280px;margin:0 auto;"><h1 style="font-size:28px;font-weight:900;margin-bottom:20px;">Kalender Rilis Terbaru</h1><div class="poster-grid">${Array(12).fill('<div class="skeleton-card"></div>').join("")}</div></div></div>`;
+  try {
+    const r = await fetch("/api/calendar");
+    const j = await r.json();
+    root.innerHTML = `
+      <div class="ambient-page" style="padding:104px 28px 90px;">
+        <div style="max-width:1280px;margin:0 auto;">
+          <h1 style="font-size:28px;font-weight:900;margin-bottom:20px;">Kalender Rilis Terbaru</h1>
+          <div class="poster-grid">${(j.items || []).map(renderCardHtml).join("")}</div>
+        </div>
+      </div>
+    `;
+  } catch {}
+}
+
+let __authTab = "signin";
+function openDonateModal() { document.getElementById('donateOverlay').classList.add('open'); }
+function closeDonateModal() { document.getElementById('donateOverlay').classList.remove('open'); }
+function openAuthModal() {
+  renderAuthCard();
+  document.getElementById("authOverlay").classList.add("open");
+}
+function closeAuthModal() { document.getElementById("authOverlay").classList.remove("open"); }
+function renderAuthCard() {
+  const card = document.getElementById("authCard");
+  card.innerHTML = `
+    <button style="position:absolute;top:16px;right:16px;font-size:18px;color:var(--muted);" onclick="closeAuthModal()">✕</button>
+    <img src="/logo.png" alt="SwaraPlay" style="width:46px;height:46px;border-radius:12px;margin:0 auto 12px;" />
+    <h2 style="font-size:21px;font-weight:900;">${__authTab === "signin" ? "Selamat datang kembali" : "Buat akun baru"}</h2>
+    <p style="font-size:13px;color:var(--muted);margin-top:4px;">${__authTab === "signin" ? "Masukkan nomor akun 16-digit kamu" : "Buat nomor akun 16-digit untuk menyimpan data"}</p>
+    <div class="auth-seg">
+      <button class="${__authTab === "signin" ? "active" : ""}" onclick="__authTab='signin'; renderAuthCard();">Masuk</button>
+      <button class="${__authTab === "register" ? "active" : ""}" onclick="__authTab='register'; renderAuthCard();">Daftar</button>
+    </div>
+    ${__authTab === "signin" ? `
+      <input class="auth-input" id="authKeyInput" maxlength="19" placeholder="XXXX-XXXX-XXXX-XXXX" value="${esc(S.accountKey)}" />
+      <button class="auth-primary-btn" onclick="submitAccountKey()">Masuk</button>
+      ${S.accountKey ? `<button style="margin-top:12px;font-size:13px;color:#F87171;font-weight:700;" onclick="logoutAccount()">Keluar dari Akun</button>` : ""}
+    ` : `
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5;">Kami akan membuatkan kunci acak <strong>16-digit</strong>. Simpan kunci ini baik-baik sebagai akses akunmu.</p>
+      <button class="auth-primary-btn" onclick="generateAccountKey()">Buat Kunci 16-Digit</button>
+    `}
+  `;
+}
+function generateAccountKey() {
+  const digits = Array.from({ length: 16 }, () => Math.floor(Math.random() * 10)).join("");
+  S.accountKey = digits;
+  localStorage.setItem("sp_account_key", digits);
+  applySettings();
+  navigator.clipboard?.writeText(digits).catch(() => {});
+  showToast(`Kunci akun dibuat & disalin: ${digits}`);
+  closeAuthModal();
+  if (S.route === "settings") renderSettingsPage();
+}
+function submitAccountKey() {
+  const val = String(document.getElementById("authKeyInput")?.value || "").replace(/\D/g, "");
+  if (val.length < 8) return showToast("Masukkan minimal 8-16 digit angka");
+  S.accountKey = val;
+  localStorage.setItem("sp_account_key", val);
+  applySettings();
+  showToast("Berhasil masuk dengan kunci akun");
+  closeAuthModal();
+  if (S.route === "settings") renderSettingsPage();
+}
+function logoutAccount() {
+  S.accountKey = "";
+  localStorage.removeItem("sp_account_key");
+  applySettings();
+  showToast("Keluar dari akun");
+  closeAuthModal();
+  if (S.route === "settings") renderSettingsPage();
+}
+
+// =========================================================================
+// FULL-SCROLL SETTINGS PAGE (CINEJOY STYLE + STICKY JUMP-NAV)
+// =========================================================================
+function renderSettingsPage() {
+  const st = S.settings;
+  const themes = [
+    { id: "default", name: "Default (Cinejoy Hijau)" },
+    { id: "oled", name: "OLED Hitam Pekat" },
+    { id: "midnight", name: "Midnight Biru" },
+    { id: "amethyst", name: "Amethyst Ungu" },
+    { id: "emerald", name: "Emerald Zamrud" },
+  ];
+  const subColors = ["#FFFFFF", "#FACC15", "#22D3EE", "#4ADE80", "#E879F9"];
+
+  document.getElementById("appRoot").innerHTML = `
+    <div class="ambient-page settings-page">
+      <div class="settings-inner">
+        <div class="settings-title-row">
+          <span>⚙ Pengaturan</span>
+        </div>
+
+        <div class="settings-jump-nav">
+          <button class="s-jump-btn active" onclick="scrollToSetting('secAccount', this)">Data Lokal</button>
+          <button class="s-jump-btn" onclick="scrollToSetting('secAppearance', this)">Tampilan</button>
+          <button class="s-jump-btn" onclick="scrollToSetting('secPlayback', this)">Pemutaran</button>
+          <button class="s-jump-btn" onclick="scrollToSetting('secServers', this)">Server</button>
+          <button class="s-jump-btn" onclick="scrollToSetting('secSubtitles', this)">Subtitle</button>
+        </div>
+
+        <!-- LOCAL DATA (ZERO LOGIN) -->
+        <section class="settings-card" id="secAccount">
+          <h3>Penyimpanan Lokal (Tanpa Login)</h3>
+          <p class="sub-desc">Semua progres tontonan, riwayat, dan daftar tersimpan langsung di perangkat ini. Data sementara otomatis dibersihkan saat selesai menonton.</p>
+          <div class="s-row">
+            <div>
+              <div class="s-label">Cadangkan & Pulihkan Data Lokal</div>
+              <div class="s-hint">Ekspor atau impor Daftar Saya, Riwayat Tontonan, dan Pengaturan (JSON)</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="chip" onclick="exportAllDataJson()">Ekspor</button>
+              <button class="chip" onclick="document.getElementById('listImportInput').click()">Impor</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- APPEARANCE -->
+        <section class="settings-card" id="secAppearance">
+          <h3>Tampilan</h3>
+          <p class="sub-desc">Ubah warna tema, gaya episode, dan tampilan halaman detail sesuai seleramu.</p>
+          <div class="s-row">
+            <div><div class="s-label">Tema Warna</div><div class="s-hint">Palet warna utama untuk seluruh antarmuka</div></div>
+            <select class="provider-inline-select" style="font-size:13.5px;" onchange="updateSetting('theme', this.value)">
+              ${themes.map((t) => `<option value="${t.id}" ${st.theme === t.id ? "selected" : ""}>${t.name}</option>`).join("")}
+            </select>
+          </div>
+          <div class="s-row">
+            <div><div class="s-label">Gaya Tampilan Episode</div><div class="s-hint">Pilih bagaimana daftar episode tampil di halaman serial</div></div>
+            <div class="seg-group">
+              <button class="seg-btn ${st.episodeStyle === "carousel" ? "active" : ""}" onclick="updateSetting('episodeStyle','carousel')">Carousel</button>
+              <button class="seg-btn ${st.episodeStyle === "grid" ? "active" : ""}" onclick="updateSetting('episodeStyle','grid')">Grid</button>
+            </div>
+          </div>
+          <div class="s-row">
+            <div><div class="s-label">Tipe Halaman Detail</div><div class="s-hint">Pilih antara halaman penuh atau jendela modal ringkas</div></div>
+            <div class="seg-group">
+              <button class="seg-btn ${st.detailType === "page" ? "active" : ""}" onclick="updateSetting('detailType','page')">Halaman</button>
+              <button class="seg-btn ${st.detailType === "modal" ? "active" : ""}" onclick="updateSetting('detailType','modal')">Modal</button>
+            </div>
+          </div>
+          ${renderToggleRow("Gunakan Logo Gambar", "Tampilkan logo gambar judul di Hero Banner dan Detail", "useLogos", st.useLogos)}
+          ${renderToggleRow("Trailer", "Tampilkan trailer YouTube pada halaman detail", "trailers", st.trailers)}
+          ${renderToggleRow("Mode Bebas Spoiler", "Sembunyikan thumbnail & sinopsis episode agar bebas spoiler", "spoilerFree", st.spoilerFree)}
+          ${renderToggleRow("Kurangi Animasi", "Matikan efek transisi untuk performa lebih ringan", "reduceMotion", st.reduceMotion)}
+        </section>
+
+        <!-- PLAYBACK -->
+        <section class="settings-card" id="secPlayback">
+          <h3>Pemutaran</h3>
+          <p class="sub-desc">Atur perilaku pemutar video, tombol kontrol, dan subtitle otomatis.</p>
+          ${renderToggleRow("Putar Otomatis Episode Berikutnya", "Lanjut ke episode berikutnya saat video selesai", "autoplay", st.autoplay)}
+          ${renderToggleRow("Lewati Intro Otomatis", "Lompati bagian pembuka otomatis saat mulai episode", "autoSkipIntro", st.autoSkipIntro)}
+          <div class="s-row">
+            <div><div class="s-label">Durasi Lompat Waktu</div><div class="s-hint">Jarak maju/mundur tombol ↺ / ↻ dan panah keyboard</div></div>
+            <select class="provider-inline-select" style="font-size:13.5px;" onchange="updateSetting('seekSeconds', Number(this.value))">
+              ${[5, 10, 15, 30].map((v) => `<option value="${v}" ${st.seekSeconds === v ? "selected" : ""}>${v} detik</option>`).join("")}
+            </select>
+          </div>
+          ${renderToggleRow("Subtitle Otomatis", "Aktifkan subtitle bahasa pilihan otomatis saat memutar", "autoSubtitles", st.autoSubtitles)}
+          <div class="s-row">
+            <div><div class="s-label">Bahasa Subtitle Default</div><div class="s-hint">Bahasa utama yang diprioritaskan</div></div>
+            <select class="provider-inline-select" style="font-size:13.5px;" onchange="updateSetting('defaultSubLang', this.value)">
+              ${["Bahasa Indonesia", "Bahasa Inggris", "Bahasa Melayu", "Bahasa Jepang"].map((l) => `<option value="${l}" ${st.defaultSubLang === l ? "selected" : ""}>${l}</option>`).join("")}
+            </select>
+          </div>
+          <div class="s-row" style="flex-direction:column;align-items:stretch;">
+            <div><div class="s-label">Kustomisasi Tombol Player</div><div class="s-hint">Pilih tombol yang ingin ditampilkan di baris bawah player</div></div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
+              ${[["pip","PiP"],["servers","Servers"],["subtitles","Subtitle"],["settings","Pengaturan"],["fullscreen","Layar Penuh"]].map(([k, lbl]) => `
+                <button class="chip ${st.playerControls[k] !== false ? "active" : ""}" onclick="togglePlayerCtrlSetting('${k}')">${esc(lbl)}</button>
+              `).join("")}
+            </div>
+          </div>
+        </section>
+
+        <!-- SERVERS -->
+        <section class="settings-card" id="secServers">
+          <h3>Urutan Prioritas Server</h3>
+          <p class="sub-desc">Atur urutan server mana yang diprioritaskan terlebih dahulu saat memutar video.</p>
+          ${(st.serverOrder || []).map((srv, idx) => `
+            <div class="server-order-item">
+              <div style="font-weight:700;font-size:14px;">${idx + 1}. ${esc(srv)}</div>
+              <div class="server-order-btns">
+                <button ${idx === 0 ? "disabled style='opacity:.3'" : ""} onclick="moveServerOrder(${idx}, -1)">↑</button>
+                <button ${idx === st.serverOrder.length - 1 ? "disabled style='opacity:.3'" : ""} onclick="moveServerOrder(${idx}, 1)">↓</button>
+              </div>
+            </div>
+          `).join("")}
+        </section>
+
+        <!-- SUBTITLES -->
+        <section class="settings-card" id="secSubtitles">
+          <h3>Subtitle</h3>
+          <p class="sub-desc">Sesuaikan font, ukuran, warna, dan latar belakang subtitle agar nyaman dibaca.</p>
+          <div class="s-row">
+            <div><div class="s-label">Font Subtitle</div></div>
+            <div class="seg-group">
+              ${["SwaraPlay", "Netflix", "Montserrat"].map((f) => `<button class="seg-btn ${st.subFont === f ? "active" : ""}" onclick="updateSetting('subFont','${f}')">${f}</button>`).join("")}
+            </div>
+          </div>
+          <div class="s-row">
+            <div><div class="s-label">Ukuran Teks (${st.subSize}%)</div></div>
+            <input type="range" class="sw-range" min="60" max="180" step="5" value="${st.subSize}" oninput="updateSetting('subSize', Number(this.value))" style="width:180px;" />
+          </div>
+          <div class="s-row">
+            <div><div class="s-label">Warna Teks</div></div>
+            <div class="color-dots">
+              ${subColors.map((c) => `<button class="color-dot ${st.subColor === c ? "active" : ""}" style="background:${c}" onclick="updateSetting('subColor','${c}')"></button>`).join("")}
+            </div>
+          </div>
+          ${renderToggleRow("Latar Belakang Blur", "Tambahkan kotak gelap transparan di belakang teks subtitle", "subBg", st.subBg)}
+          <div style="margin-top:16px;padding:24px 16px;border-radius:16px;background:rgba(0,0,0,0.65);text-align:center;">
+            <span class="custom-sub-text ${st.subBg ? "" : "no-bg"} ${st.subPastel ? "pastel" : ""}" style="font-size:calc(18px * ${st.subSize / 100});color:${st.subColor};font-family:${FONT_MAP[st.subFont] || FONT_MAP.SwaraPlay};">Contoh tampilan subtitle Bahasa Indonesia di SwaraPlay.</span>
+          </div>
+        </section>
+      </div>
+    </div>
+  `;
+}
+
+function renderToggleRow(label, hint, key, val) {
+  return `
+    <div class="s-row">
+      <div><div class="s-label">${esc(label)}</div><div class="s-hint">${esc(hint)}</div></div>
+      <label class="switch"><input type="checkbox" ${val ? "checked" : ""} onchange="updateSetting('${key}', this.checked)" /><span class="slider"></span></label>
+    </div>
+  `;
+}
+function updateSetting(key, val) {
+  S.settings[key] = val;
+  applySettings();
+  if (S.route === "settings") renderSettingsPage();
+  if (S.playerOpen && document.getElementById("playerOverlay").classList.contains("open")) renderPlayerOverlayContent();
+}
+function togglePlayerCtrlSetting(k) {
+  S.settings.playerControls[k] = S.settings.playerControls[k] === false ? true : false;
+  applySettings();
+  renderSettingsPage();
+}
+function moveServerOrder(idx, delta) {
+  const arr = [...S.settings.serverOrder];
+  const target = idx + delta;
+  if (target < 0 || target >= arr.length) return;
+  [arr[idx], arr[target]] = [arr[target], arr[idx]];
+  S.settings.serverOrder = arr;
+  applySettings();
+  renderSettingsPage();
+}
+function scrollToSetting(id, btn) {
+  document.querySelectorAll(".s-jump-btn").forEach((b) => b.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// =========================================================================
+// FULLSCREEN CINEJOY PLAYER ENGINE (MULTI-SERVER + ANTI-OVERLAP SUBTITLES)
+// =========================================================================
+const videoEl = () => document.getElementById("watchVideo");
+
+async function startPlayback(item, season = 1, episode = 1, episodes = [], resumeSec = 0) {
+  if (!item) return;
+  S.playerOpen = true;
+  S.pItem = item;
+  S.pSeason = season;
+  S.pEpisode = episode;
+  S.pEpisodes = episodes.length ? episodes : S.pEpisodes;
+  S.pSources = [];
+  S.pActiveSrcIdx = 0;
+  S.pSubtitles = [];
+  S.pActiveSubIdx = -1;
+  S.pCues = [];
+
+  document.getElementById("topbarWrap").classList.add("hidden-nav");
+  document.getElementById("playerScreen").classList.add("open", "hud-visible");
+  document.getElementById("hudTitle").textContent = item.category === "MOVIE" ? item.title : `${item.title} • S${season} E${episode}`;
+  document.getElementById("hudEpisodesBtn").style.display = (item.category !== "MOVIE" && S.pEpisodes.length) ? "inline-flex" : "none";
+  document.getElementById("customSubLayer").style.display = "none";
+  closePlayerOverlays();
+  showPlayerLoader(`Memanggil server untuk ${item.title}...`);
+  scheduleHudAutoHide();
+
+  try { history.pushState({ swaraPlayer: true }, ""); } catch {}
+
+  const q = new URLSearchParams({
+    id: item.id || "", imdbId: item.imdbId || "", tmdbId: item.tmdbId || "",
+    aniListId: item.aniListId || "", malId: item.malId || "", kisskhId: item.kisskhId || "",
+    title: item.title || "", year: item.year || "", category: item.category || "MOVIE",
+    season: String(season), episode: String(episode),
+  });
+
+  // Fetch subtitles in parallel
+  fetch(`/api/subtitles?${q.toString()}`).then((r) => r.json()).then((j) => {
+    mergeSubtitles(j.subtitles || []);
+  }).catch(() => {});
+
+  const normalizeServer = (s, i) => ({
+    url: s.streamUrl || s.url || "",
+    label: s.name || s.providerName || s.label || `Server ${i + 1}`,
+    quality: s.quality || s.qualityLabel || "HD",
+    referer: s.referer || "",
+    origin: s.origin || "",
+    type: s.type || "",
+    subtitles: s.subtitles || [],
+    qualities: Array.isArray(s.qualities) ? s.qualities : [],
+  });
+
+  // 1) Fast first-wins resolve
+  try {
+    const r = await fetch(`/api/resolve?${q.toString()}`);
+    const j = await r.json();
+    const rawList = (j.servers || j.sources || []).map(normalizeServer).filter((x) => x.url);
+    const firstSources = sortSourcesByPriority(rawList);
+    if (firstSources.length) {
+      S.pSources = firstSources;
+      updateServersBtnLabel();
+      if (j.subtitles) mergeSubtitles(j.subtitles);
+      firstSources.forEach((s) => { if (s.subtitles?.length) mergeSubtitles(s.subtitles); });
+      loadStreamSource(0, resumeSec);
+    }
+  } catch {}
+
+  // 2) Full multi-server race in background so Servers drawer has ALL working servers
+  fetch(`/api/resolve/servers?${q.toString()}`).then((r) => r.json()).then((j) => {
+    const rawAll = (j.servers || j.sources || []).map(normalizeServer).filter((x) => x.url);
+    const all = sortSourcesByPriority(rawAll);
+    if (!all.length) {
+      if (!S.pSources.length) showPlayerLoader("Server sedang sibuk. Coba ulangi atau pilih episode lain.");
+      return;
+    }
+    const currentUrl = S.pSources[S.pActiveSrcIdx]?.url;
+    const merged = [...S.pSources];
+    for (const src of all) {
+      if (!merged.some((x) => x.url === src.url)) merged.push(src);
+    }
+    S.pSources = sortSourcesByPriority(merged);
+    if (currentUrl) {
+      const newIdx = S.pSources.findIndex((x) => x.url === currentUrl);
+      if (newIdx >= 0) S.pActiveSrcIdx = newIdx;
+    } else {
+      loadStreamSource(0, resumeSec);
+    }
+    updateServersBtnLabel();
+    if (j.subtitles) mergeSubtitles(j.subtitles);
+    all.forEach((s) => { if (s.subtitles?.length) mergeSubtitles(s.subtitles); });
+    if (document.getElementById("serversDrawer").classList.contains("open")) renderServersDrawer();
+  }).catch(() => {});
+}
+
+function sortSourcesByPriority(sources) {
+  const order = (S.settings.serverOrder || []).map((x) => x.toLowerCase());
+  return [...sources].sort((a, b) => {
+    const la = String(a.label || a.name || "").toLowerCase();
+    const lb = String(b.label || b.name || "").toLowerCase();
+    const ia = order.findIndex((o) => la.includes(o));
+    const ib = order.findIndex((o) => lb.includes(o));
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  });
+}
+
+function updateServersBtnLabel() {
+  const lbl = document.getElementById("hudServersBtnLabel");
+  if (lbl) lbl.textContent = S.pSources.length ? `Servers (${S.pSources.length})` : "Servers";
+}
+
+function showPlayerLoader(msg) {
+  const l = document.getElementById("playerLoader");
+  const st = document.getElementById("loaderStatus");
+  if (st) st.textContent = msg;
+  if (l) l.classList.add("show");
+}
+function hidePlayerLoader() {
+  document.getElementById("playerLoader")?.classList.remove("show");
+}
+
+function loadStreamSource(idx, resumeSec = 0) {
+  const src = S.pSources[idx];
+  if (!src) return;
+  S.pActiveSrcIdx = idx;
+  const label = src.label || src.name || `Server ${idx + 1}`;
+  showPlayerLoader(`Memuat ${label}...`);
+
+  const v = videoEl();
+  if (S.pHls) { S.pHls.destroy(); S.pHls = null; }
+  v.pause();
+
+  const proxiedUrl = `/api/proxy?url=${encodeURIComponent(src.url)}&referer=${encodeURIComponent(src.referer || "")}&origin=${encodeURIComponent(src.origin || "")}`;
+
+  const onReady = () => {
+    hidePlayerLoader();
+    if (resumeSec > 5 && isFinite(v.duration) && resumeSec < v.duration - 15) v.currentTime = resumeSec;
+    v.playbackRate = S.pSpeed;
+    applyVideoVisuals();
+    v.play().catch(() => {});
+    updatePlayIcon();
+  };
+
+  if (window.Hls && Hls.isSupported() && (src.url.includes(".m3u8") || src.type === "hls" || !src.url.includes(".mp4"))) {
+    const hls = new Hls({
+      enableWorker: true,
+      lowLatencyMode: false,
+      startLevel: -1,
+      autoStartLoad: true,
+      startFragPrefetch: true,
+      maxBufferLength: 18,
+      maxMaxBufferLength: 30,
+      backBufferLength: 10,
+      fragLoadingTimeOut: 8000,
+      manifestLoadingTimeOut: 7000,
+      levelLoadingTimeOut: 7000,
+    });
+    S.pHls = hls;
+    hls.loadSource(proxiedUrl);
+    hls.attachMedia(v);
+    hls.on(Hls.Events.MANIFEST_PARSED, onReady);
+    hls.on(Hls.Events.ERROR, (_, data) => {
+      if (data.fatal) {
+        if (idx + 1 < S.pSources.length) {
+          showToast(`${label} gagal, beralih ke server berikutnya...`);
+          loadStreamSource(idx + 1, v.currentTime || resumeSec);
+        } else {
+          showPlayerLoader("Stream gagal dimuat. Pilih server lain di tombol Servers.");
+        }
+      }
+    });
+  } else {
+    v.src = proxiedUrl;
+    v.onloadedmetadata = onReady;
+    v.onerror = () => {
+      if (idx + 1 < S.pSources.length) loadStreamSource(idx + 1, v.currentTime || resumeSec);
+      else showPlayerLoader("Stream gagal dimuat. Coba pilih server lain.");
+    };
+  }
+}
+
+function closePlayer() {
+  saveCurrentWatchProgress();
+  const v = videoEl();
+  v.pause();
+  if (S.pHls) { S.pHls.destroy(); S.pHls = null; }
+  v.removeAttribute("src");
+  v.load();
+  clearTimeout(S.pSleepTimeout);
+  S.playerOpen = false;
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  document.getElementById("playerScreen").classList.remove("open");
+  document.getElementById("topbarWrap").classList.remove("hidden-nav");
+  if (S.route === "home") renderHome();
+}
+
+window.addEventListener("popstate", () => {
+  if (S.playerOpen) closePlayer();
+});
+
+function saveCurrentWatchProgress(finished = false) {
+  const v = videoEl();
+  if (!S.pItem || !v || !isFinite(v.duration) || v.duration < 30) return;
+  const pos = Math.floor(v.currentTime || 0);
+  const dur = Math.floor(v.duration || 0);
+  const completed = finished || (dur > 0 && pos / dur >= 0.92);
+  const entry = {
+    id: S.pItem.id,
+    imdbId: S.pItem.imdbId || "",
+    tmdbId: S.pItem.tmdbId || "",
+    title: S.pItem.title,
+    category: S.pItem.category,
+    poster: S.pItem.poster,
+    backdrop: S.pItem.backdrop || S.pItem.poster,
+    year: S.pItem.year || "",
+    rating: S.pItem.rating || "",
+    season: S.pSeason,
+    episode: S.pEpisode,
+    position: completed ? dur : pos,
+    duration: dur,
+    completed,
+    updatedAt: Date.now(),
+  };
+  S.history = [entry, ...S.history.filter((x) => x.id !== entry.id)].slice(0, 30);
+  saveJson("sp_history_v113", S.history);
+  if (completed) {
+    // Clean temporary playback caches when finished, keeping only watch history & progress
+    S.pCues = [];
+    S.pSources = [];
+    S.pSubtitles = [];
+  }
+}
+
+// =========================================================================
+// CUSTOM ANTI-OVERLAP SUBTITLE ENGINE (VTT / SRT PARSER + DELAY + UPLOAD)
+// =========================================================================
+function mergeSubtitles(list) {
+  for (const s of list) {
+    if (!s || !s.url) continue;
+    if (!S.pSubtitles.some((x) => x.url === s.url)) S.pSubtitles.push(s);
+  }
+  if (S.settings.autoSubtitles && S.pActiveSubIdx === -1 && S.pSubtitles.length) {
+    const pref = (S.settings.defaultSubLang || "Bahasa Indonesia").toLowerCase();
+    const exact = S.pSubtitles.findIndex((x) => String(x.label || x.lang || "").toLowerCase().includes(pref));
+    if (exact >= 0) selectSubtitleTrack(exact);
+    else if (pref.includes("indonesia")) {
+      const enIdx = S.pSubtitles.findIndex((x) => String(x.label || x.lang || "").toLowerCase().includes("inggris") || String(x.lang || "").toLowerCase() === "en");
+      if (enIdx >= 0) selectSubtitleTrack(enIdx, true); // auto translate to Indonesian!
+    }
+  }
+}
+
+async function selectSubtitleTrack(idx, translateToId = false, triedIndices = new Set()) {
+  S.pActiveSubIdx = idx;
+  if (idx < 0) {
+    S.pCues = [];
+    document.getElementById("customSubLayer").style.display = "none";
+    clearNativeTracks();
+    showToast("Subtitle dimatikan");
+    return;
+  }
+  const sub = S.pSubtitles[idx];
+  if (!sub) return;
+  triedIndices.add(idx);
+  const rawTarget = sub.rawUrl || (sub.url.startsWith("/api/sub?url=") ? decodeURIComponent(sub.url.slice("/api/sub?url=".length)) : sub.url);
+  const url = translateToId
+    ? `/api/sub/translate?url=${encodeURIComponent(rawTarget)}`
+    : ((sub.url.startsWith("blob:") || sub.url.startsWith("/api/")) ? sub.url : `/api/sub?url=${encodeURIComponent(rawTarget)}`);
+  try {
+    let text = await fetch(url).then((r) => r.text());
+    try {
+      const maybeJson = JSON.parse(text);
+      if (typeof maybeJson?.result === "string") text = maybeJson.result;
+    } catch {}
+    const parsed = parseVttOrSrt(text);
+    if (!parsed.length) {
+      const wantedIndo = translateToId || String(sub.label || sub.lang || "").toLowerCase().includes("indonesia");
+      if (wantedIndo) {
+        const nextIndo = S.pSubtitles.findIndex((x, i) => !triedIndices.has(i) && String(x.label || x.lang || "").toLowerCase().includes("indonesia"));
+        if (nextIndo >= 0) return selectSubtitleTrack(nextIndo, false, triedIndices);
+        // Seamlessly translate the best English track into Bahasa Indonesia while keeping Indonesian active!
+        const enIdx = S.pSubtitles.findIndex((x, i) => !triedIndices.has(i) && (String(x.label || "").toLowerCase().includes("inggris") || String(x.lang || "").toLowerCase() === "en"));
+        if (enIdx >= 0) {
+          showToast("Menerjemahkan subtitle ke Bahasa Indonesia...");
+          S.pActiveSubLabel = "Bahasa Indonesia";
+          return selectSubtitleTrack(enIdx, true, triedIndices);
+        }
+      }
+      showToast("Track subtitle tidak tersedia — coba track lain");
+      return;
+    }
+    S.pActiveSubLabel = translateToId ? "Bahasa Indonesia" : (sub.label || sub.lang || "Aktif").replace(/\s*#\d+$/, "");
+    loadSubtitleText(text, translateToId ? "Bahasa Indonesia (Terjemahan)" : (sub.label || sub.lang), parsed);
+  } catch {
+    showToast("Gagal memuat subtitle");
+  }
+}
+
+function loadSubtitleText(rawText, label = "Subtitle", preParsed = null) {
+  S.pCues = preParsed || parseVttOrSrt(rawText);
+  if (!S.pCues.length) {
+    showToast("File subtitle tidak berisi dialog");
+    return;
+  }
+  if (S.settings.subNative) {
+    applyNativeTrack(rawText, label);
+    document.getElementById("customSubLayer").style.display = "none";
+  } else {
+    clearNativeTracks();
+    document.getElementById("customSubLayer").style.display = "block";
+    renderActiveCue();
+  }
+  showToast(`Subtitle aktif: ${label} (${S.pCues.length} baris)`);
+}
+
+function clearNativeTracks() {
+  const v = videoEl();
+  if (!v) return;
+  v.querySelectorAll("track").forEach((t) => t.remove());
+}
+function applyNativeTrack(vttText, label) {
+  clearNativeTracks();
+  const v = videoEl();
+  if (!v) return;
+  const norm = vttText.trim().startsWith("WEBVTT") ? vttText : "WEBVTT\n\n" + vttText.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, "$1.$2");
+  const blob = new Blob([norm], { type: "text/vtt" });
+  const tr = document.createElement("track");
+  tr.kind = "subtitles"; tr.label = label; tr.srclang = "id"; tr.default = true;
+  tr.src = URL.createObjectURL(blob);
+  v.appendChild(tr);
+  if (v.textTracks[0]) v.textTracks[0].mode = "showing";
+}
+
+function parseVttOrSrt(raw) {
+  const clean = String(raw || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/^\uFEFF/, "");
+  const blocks = clean.split(/\n{2,}/);
+  const cues = [];
+  const toSec = (t) => {
+    const p = t.trim().replace(",", ".").split(":").map(Number);
+    if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2];
+    if (p.length === 2) return p[0] * 60 + p[1];
+    return 0;
+  };
+  for (const b of blocks) {
+    const lines = b.split("\n").map((l) => l.trim()).filter(Boolean);
+    const timeIdx = lines.findIndex((l) => l.includes("-->"));
+    if (timeIdx < 0) continue;
+    const [a, c] = lines[timeIdx].split("-->");
+    const start = toSec(a);
+    const end = toSec((c || "").trim().split(/\s+/)[0]);
+    const text = lines.slice(timeIdx + 1).join("\n").replace(/<[^>]+>/g, "").trim();
+    if (text && end > start) cues.push({ start, end, text });
+  }
+  return cues;
+}
+
+function renderActiveCue() {
+  if (S.settings.subNative || !S.pCues.length) {
+    document.getElementById("customSubLayer").style.display = "none";
+    return;
+  }
+  const v = videoEl();
+  const t = (v?.currentTime || 0) - Number(S.settings.subDelay || 0);
+  const hit = S.pCues.find((c) => t >= c.start && t <= c.end);
+  const layer = document.getElementById("customSubLayer");
+  const txt = document.getElementById("customSubText");
+  if (hit) {
+    txt.textContent = hit.text;
+    layer.style.display = "block";
+  } else {
+    layer.style.display = "none";
+  }
+}
+
+function handleSubFileUpload(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    loadSubtitleText(String(reader.result || ""), file.name);
+    closePlayerOverlays();
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+}
+
+// =========================================================================
+// PLAYER CONTROLS, VOLUME BOOST, BRIGHTNESS, SLEEP TIMER, KEYBOARD
+// =========================================================================
+function switchDirectQualityVariant(proxyUrl, label, height) {
+  const v = videoEl();
+  const resumeAt = v ? (v.currentTime || 0) : 0;
+  const activeSrc = S.pSources[S.pActiveSrcIdx];
+  if (!activeSrc || !proxyUrl) return;
+  S.pTargetQuality = height ? String(height) : "auto";
+  activeSrc.proxyUrl = proxyUrl;
+  activeSrc.quality = label || (height ? `${height}p` : "HD");
+  loadStreamSource(S.pActiveSrcIdx, resumeAt);
+  showToast(`Kualitas diubah ke ${activeSrc.quality}`);
+}
+
+function applyRealHlsLevel(levelIdx, height = 0) {
+  if (!S.pHls) return;
+  if (levelIdx === -1) {
+    S.pTargetQuality = "auto";
+    S.pHls.autoLevelCapping = -1;
+    S.pHls.currentLevel = -1;
+    S.pHls.nextLevel = -1;
+    showToast("Kualitas: Auto");
+  } else {
+    S.pTargetQuality = height ? String(height) : "auto";
+    S.pHls.nextLevel = levelIdx;
+    S.pHls.currentLevel = levelIdx;
+    S.pHls.loadLevel = levelIdx;
+    showToast(`Resolusi beralih halus ke ${height ? height + "p" : "pilihan"}`);
+  }
+}
+
+function applyVideoQuality(q) {
+  S.pTargetQuality = q;
+  if (!S.pHls) { showToast(`Kualitas diatur: ${q === "auto" ? "Auto" : q + "p"}`); return; }
+  if (q === "auto") {
+    S.pHls.currentLevel = -1;
+    S.pHls.autoLevelCapping = -1;
+    showToast("Kualitas: Auto");
+    return;
+  }
+  const target = Number(q);
+  const levels = S.pHls.levels || [];
+  let bestIdx = -1;
+  let bestDiff = 9999;
+  levels.forEach((lv, i) => {
+    const h = lv.height || 0;
+    if (h > 0 && Math.abs(h - target) < bestDiff) { bestDiff = Math.abs(h - target); bestIdx = i; }
+  });
+  if (bestIdx >= 0 && bestDiff <= 140) {
+    S.pHls.currentLevel = bestIdx;
+    showToast(`Kualitas dikunci ke ${levels[bestIdx].height}p`);
+  } else {
+    // Cap max bitrate/height or switch to matching quality server if present
+    const altIdx = S.pSources.findIndex((s, i) => i !== S.pActiveSrcIdx && String(s.quality || "").includes(String(target)));
+    if (altIdx >= 0) {
+      showToast(`Beralih ke server ${target}p...`);
+      loadStreamSource(altIdx, videoEl().currentTime || 0);
+    } else {
+      const capIdx = levels.findIndex((lv) => (lv.height || 9999) <= target);
+      if (capIdx >= 0) S.pHls.autoLevelCapping = capIdx;
+      showToast(`Preferensi kualitas diatur ke ${target}p`);
+    }
+  }
+}
+
+function togglePlayPause() {
+  const v = videoEl();
+  if (v.paused) v.play().catch(() => {});
+  else v.pause();
+  updatePlayIcon();
+  scheduleHudAutoHide();
+}
+function updatePlayIcon() {
+  const v = videoEl();
+  const btn = document.getElementById("hudPlayBtn");
+  if (!btn) return;
+  btn.innerHTML = v.paused
+    ? '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+}
+function skipSeconds(dir) {
+  const v = videoEl();
+  const step = Number(S.settings.seekSeconds || 10);
+  v.currentTime = Math.max(0, Math.min(v.duration || 0, (v.currentTime || 0) + dir * step));
+  scheduleHudAutoHide();
+}
+async function togglePiP() {
+  const v = videoEl();
+  try {
+    if (document.pictureInPictureElement) await document.exitPictureInPicture();
+    else if (v.requestPictureInPicture) await v.requestPictureInPicture();
+    else showToast("Browser ini tidak mendukung Picture-in-Picture");
+  } catch { showToast("PiP tidak tersedia saat ini"); }
+}
+async function toggleFullscreen() {
+  const el = document.getElementById("playerScreen");
+  try {
+    if (!document.fullscreenElement) {
+      await el.requestFullscreen();
+      if (screen.orientation?.lock) screen.orientation.lock("landscape").catch(() => {});
+    } else {
+      await document.exitFullscreen();
+    }
+  } catch { showToast("Layar penuh tidak didukung browser ini"); }
+}
+async function triggerCast() {
+  const v = videoEl();
+  if (v.remote && typeof v.remote.prompt === "function") {
+    v.remote.prompt().catch(() => showToast("Tidak ada perangkat Cast ditemukan"));
+  } else {
+    showToast("Gunakan menu Cast browser untuk transmisi ke TV");
+  }
+}
+
+function applyVideoVisuals() {
+  const v = videoEl();
+  if (!v) return;
+  v.classList.remove("zoom-fill", "zoom-stretch");
+  if (S.pZoom === "fill") v.classList.add("zoom-fill");
+  else if (S.pZoom === "stretch") v.classList.add("zoom-stretch");
+  const filters = [`brightness(${S.pBrightness}%)`];
+  if (S.pModifyColors) filters.push(`contrast(${S.pContrast}%)`, `saturate(${S.pSaturate}%)`);
+  v.style.filter = filters.join(" ");
+  v.playbackRate = S.pSpeed;
+}
+
+function setVolumeBoost(pct) {
+  S.pVolumeBoost = pct;
+  try {
+    const v = videoEl();
+    if (!S.pAudioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      S.pAudioCtx = new AC();
+      const src = S.pAudioCtx.createMediaElementSource(v);
+      S.pGainNode = S.pAudioCtx.createGain();
+      src.connect(S.pGainNode);
+      S.pGainNode.connect(S.pAudioCtx.destination);
+    }
+    if (S.pAudioCtx.state === "suspended") S.pAudioCtx.resume();
+    S.pGainNode.gain.value = pct / 100;
+  } catch {}
+}
+
+function setSleepTimer(minutes) {
+  S.pSleepMinutes = Math.max(0, minutes);
+  clearTimeout(S.pSleepTimeout);
+  if (S.pSleepMinutes > 0) {
+    S.pSleepTimeout = setTimeout(() => {
+      videoEl()?.pause();
+      updatePlayIcon();
+      showToast("Sleep Timer selesai — video dijeda");
+      S.pSleepMinutes = 0;
+    }, S.pSleepMinutes * 60 * 1000);
+    showToast(`Sleep Timer diatur: ${S.pSleepMinutes} menit`);
+  }
+}
+
+function onStageTap(e) {
+  if (e.target.closest("button, input, .servers-drawer, .p-overlay")) return;
+  const ps = document.getElementById("playerScreen");
+  if (ps.classList.contains("hud-visible")) {
+    ps.classList.remove("hud-visible");
+    clearTimeout(S.pHudTimer);
+  } else {
+    ps.classList.add("hud-visible");
+    scheduleHudAutoHide();
+  }
+}
+function scheduleHudAutoHide() {
+  clearTimeout(S.pHudTimer);
+  const ps = document.getElementById("playerScreen");
+  ps.classList.add("hud-visible");
+  S.pHudTimer = setTimeout(() => {
+    const v = videoEl();
+    if (S.playerOpen && v && !v.paused && !document.getElementById("playerOverlay").classList.contains("open") && !document.getElementById("serversDrawer").classList.contains("open")) {
+      ps.classList.remove("hud-visible");
+    }
+  }, 3800);
+}
+
+// =========================================================================
+// PLAYER OVERLAYS: SERVERS DRAWER, FULL-SCREEN SUBTITLES, SETTINGS HUB, EPISODES
+// =========================================================================
+let __activePlayerOverlay = "";
+function openPlayerOverlay(kind) {
+  closePlayerOverlays();
+  __activePlayerOverlay = kind;
+  if (kind === "servers") {
+    renderServersDrawer();
+    document.getElementById("serversDrawer").classList.add("open");
+    return;
+  }
+  if (kind === "settings") S.pSettingsView = "hub";
+  renderPlayerOverlayContent();
+  document.getElementById("playerOverlay").classList.add("open");
+}
+
+function closePlayerOverlays() {
+  __activePlayerOverlay = "";
+  document.getElementById("serversDrawer").classList.remove("open");
+  document.getElementById("playerOverlay").classList.remove("open");
+}
+
+function renderServersDrawer() {
+  const el = document.getElementById("serversDrawer");
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <strong style="font-size:15px;">Servers (${S.pSources.length})</strong>
+      <button style="font-size:18px;color:var(--muted);" onclick="closePlayerOverlays()">✕</button>
+    </div>
+    ${S.pSources.length ? S.pSources.map((src, i) => `
+      <div class="server-row ${i === S.pActiveSrcIdx ? "active" : ""}" onclick="loadStreamSource(${i}, videoEl().currentTime || 0); closePlayerOverlays();">
+        <span>🌐 ${esc(src.label || src.name || `Server ${i + 1}`)} ${src.quality ? `<small style="color:var(--muted);margin-left:6px;">${esc(src.quality)}</small>` : ""}</span>
+        ${i === S.pActiveSrcIdx ? `<span style="color:var(--brand-green);font-weight:900;">✓</span>` : ""}
+      </div>
+    `).join("") : `<div style="color:var(--muted);padding:14px 0;">Mencari server aktif...</div>`}
+  `;
+}
+
+function renderPlayerOverlayContent() {
+  const el = document.getElementById("playerOverlay");
+  if (__activePlayerOverlay === "subtitles") {
+    const groups = new Map();
+    S.pSubtitles.forEach((s, idx) => {
+      const lang = s.label || s.lang || "Bahasa Lainnya";
+      const base = lang.replace(/\s*#\d+$/, "").trim();
+      if (!groups.has(base)) groups.set(base, []);
+      groups.get(base).push({ ...s, idx });
+    });
+    const q = S.pSubSearch.trim().toLowerCase();
+    const entries = [...groups.entries()].filter(([lang]) => !q || lang.toLowerCase().includes(q));
+    const hasIndo = groups.has("Bahasa Indonesia");
+    const firstEn = S.pSubtitles.findIndex((x) => String(x.label || "").toLowerCase().includes("inggris"));
+
+    el.innerHTML = `
+      <div class="p-overlay-head">
+        <div class="p-overlay-title">Subtitle</div>
+        <button class="chip" onclick="__activePlayerOverlay='settings'; S.pSettingsView='subtitle'; renderPlayerOverlayContent();">Kustomisasi</button>
+      </div>
+      <div class="p-overlay-body">
+        <div class="sub-lang-row ${S.pActiveSubIdx === -1 ? "active" : ""}" onclick="selectSubtitleTrack(-1); closePlayerOverlays();">
+          <span>Matikan Subtitle</span>
+          ${S.pActiveSubIdx === -1 ? `<span style="color:var(--brand-green)">✓</span>` : ""}
+        </div>
+        <div class="sub-lang-row" onclick="document.getElementById('subFileInput').click()">
+          <span>Unggah file subtitle (.srt / .vtt)</span><span>↑</span>
+        </div>
+        <div class="sub-lang-row" onclick="__activePlayerOverlay='settings'; S.pSettingsView='subtitle'; renderPlayerOverlayContent();">
+          <span>Sinkronisasi subtitle ke audio (${S.settings.subDelay}s)</span><span>›</span>
+        </div>
+        ${(!hasIndo && firstEn >= 0) ? `
+          <div class="sub-lang-row" style="border:1px solid rgba(34,197,94,0.35);margin-top:6px;" onclick="selectSubtitleTrack(${firstEn}, true); closePlayerOverlays();">
+            <span>🇮🇩 Terjemahkan otomatis ke Bahasa Indonesia</span><span style="color:var(--brand-green)">Auto</span>
+          </div>
+        ` : ""}
+        <input class="sub-search-input" type="text" placeholder="🔍 Cari bahasa..." value="${esc(S.pSubSearch)}" oninput="S.pSubSearch=this.value; renderPlayerOverlayContent();" />
+        ${entries.map(([lang, list]) => {
+          const flag = LANG_FLAGS[lang] || "🌐";
+          const isAct = (S.pActiveSubLabel && lang === S.pActiveSubLabel) || (!S.pActiveSubLabel && list.some((x) => x.idx === S.pActiveSubIdx));
+          const expanded = S.pSubExpandedLang === lang;
+          return `
+            <div class="sub-lang-row ${isAct ? "active" : ""}" onclick="${list.length === 1 ? `selectSubtitleTrack(${list[0].idx}); closePlayerOverlays();` : `S.pSubExpandedLang = S.pSubExpandedLang==='${esc(lang).replace(/'/g,"\\'")}' ? null : '${esc(lang).replace(/'/g,"\\'")}'; renderPlayerOverlayContent();`}">
+              <span>${flag} ${esc(lang)}</span>
+              <span style="color:var(--muted);">${list.length} ${isAct ? '<strong style="color:var(--brand-green);margin-left:6px;">✓</strong>' : "›"}</span>
+            </div>
+            ${expanded ? `<div style="padding-left:24px;margin-bottom:8px;">
+              ${list.map((t, ti) => `
+                <div class="sub-lang-row ${t.idx === S.pActiveSubIdx ? "active" : ""}" onclick="selectSubtitleTrack(${t.idx}); closePlayerOverlays();">
+                  <span>${esc(lang)} #${ti + 1}</span>
+                  ${t.idx === S.pActiveSubIdx ? `<span style="color:var(--brand-green)">✓</span>` : ""}
+                </div>
+              `).join("")}
+            </div>` : ""}
+          `;
+        }).join("")}
+      </div>
+      <div class="p-overlay-foot"><button class="p-close-bar" onclick="closePlayerOverlays()">TUTUP</button></div>
+    `;
+    return;
+  }
+
+  if (__activePlayerOverlay === "episodes") {
+    el.innerHTML = `
+      <div class="p-overlay-head">
+        <div class="p-overlay-title">Daftar Episode (${S.pEpisodes.length})</div>
+      </div>
+      <div class="p-overlay-body">
+        <div class="ep-grid">
+          ${S.pEpisodes.map((ep) => `
+            <div class="ep-card" style="${ep.season === S.pSeason && ep.episode === S.pEpisode ? "border-color:var(--brand-green);" : ""}" onclick="startPlayback(S.pItem, ${ep.season}, ${ep.episode}, S.pEpisodes, 0)">
+              <div class="ep-info">
+                <div class="ep-title">S${ep.season} E${ep.episode} • ${esc(ep.title || `Episode ${ep.episode}`)}</div>
+                <div class="ep-desc">${esc(ep.overview || "")}</div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+      <div class="p-overlay-foot"><button class="p-close-bar" onclick="closePlayerOverlays()">TUTUP</button></div>
+    `;
+    return;
+  }
+
+  if (__activePlayerOverlay === "settings") {
+    const view = S.pSettingsView;
+    const activeSrcLabel = S.pSources[S.pActiveSrcIdx]?.label || "Auto";
+    const activeSubLabel = S.pActiveSubIdx >= 0 ? (S.pActiveSubLabel || S.pSubtitles[S.pActiveSubIdx]?.label || "Aktif") : "Mati";
+    const hlsLevels = S.pHls?.levels || [];
+    const activeLvlObj = (S.pHls && S.pHls.currentLevel >= 0) ? hlsLevels[S.pHls.currentLevel] : null;
+    const curLevel = activeLvlObj?.height
+      ? `${activeLvlObj.height}p`
+      : (S.pTargetQuality && S.pTargetQuality !== "auto" ? `${S.pTargetQuality}p` : "Auto");
+    const audioTracks = S.pHls?.audioTracks || [];
+    const curAudio = audioTracks[S.pHls?.audioTrack]?.name || "Default";
+
+    if (view === "hub") {
+      el.innerHTML = `
+        <div class="p-overlay-head">
+          <div class="p-overlay-title">Pengaturan Player</div>
+        </div>
+        <div class="p-overlay-body">
+          <div class="p-cards-grid">
+            <button class="p-stat-card" onclick="S.pSettingsView='quality'; renderPlayerOverlayContent();"><div class="p-stat-k">KUALITAS</div><div class="p-stat-v">${esc(curLevel)}</div></button>
+            <button class="p-stat-card" onclick="openPlayerOverlay('servers')"><div class="p-stat-k">SERVER</div><div class="p-stat-v">${esc(activeSrcLabel)}</div></button>
+            <button class="p-stat-card" onclick="openPlayerOverlay('subtitles')"><div class="p-stat-k">SUBTITLE</div><div class="p-stat-v">${esc(activeSubLabel)}</div></button>
+            <button class="p-stat-card" onclick="S.pSettingsView='audio'; renderPlayerOverlayContent();"><div class="p-stat-k">AUDIO</div><div class="p-stat-v">${esc(curAudio)}</div></button>
+          </div>
+          <button class="p-menu-row" onclick="S.pSettingsView='sleep'; renderPlayerOverlayContent();"><span>🌙 Sleep Timer ${S.pSleepMinutes ? `(${S.pSleepMinutes} mnt)` : ""}</span><span>›</span></button>
+          <div class="p-menu-row">
+            <span>💬 Aktifkan Subtitle</span>
+            <label class="switch"><input type="checkbox" ${S.pActiveSubIdx >= 0 ? "checked" : ""} onchange="if(!this.checked) selectSubtitleTrack(-1); else if(S.pSubtitles.length) selectSubtitleTrack(0); renderPlayerOverlayContent();" /><span class="slider"></span></label>
+          </div>
+          <button class="p-menu-row" onclick="S.pSettingsView='playback'; renderPlayerOverlayContent();"><span>▶ Pengaturan Pemutaran</span><span>›</span></button>
+          <button class="p-menu-row" onclick="S.pSettingsView='subtitle'; renderPlayerOverlayContent();"><span>🎨 Pengaturan Subtitle</span><span>›</span></button>
+        </div>
+        <div class="p-overlay-foot"><button class="p-close-bar" onclick="closePlayerOverlays()">TUTUP</button></div>
+      `;
+    } else if (view === "quality") {
+      // Build deduplicated real HLS levels sorted high -> low
+      const seenH = new Set();
+      const realLevels = hlsLevels
+        .map((lv, idx) => ({ idx, h: lv.height || 0, br: lv.bitrate ? (lv.bitrate / 1e6).toFixed(1) + " Mbps" : "" }))
+        .filter((x) => x.h > 0)
+        .sort((a, b) => b.h - a.h)
+        .filter((x) => { if (seenH.has(x.h)) return false; seenH.add(x.h); return true; });
+      const curIdx = S.pHls ? S.pHls.currentLevel : -1;
+      const activeSrcObj = S.pSources[S.pActiveSrcIdx];
+      const directVariants = (activeSrcObj?.qualities || []).filter((q) => q && q.proxyUrl);
+      const otherServerQualities = S.pSources
+        .map((s, sIdx) => ({ sIdx, label: s.label || s.name, quality: s.quality || "HD" }))
+        .filter((x) => x.sIdx !== S.pActiveSrcIdx);
+      el.innerHTML = `
+        <div class="p-overlay-head"><button class="p-overlay-title" onclick="S.pSettingsView='hub'; renderPlayerOverlayContent();">← Kualitas Video</button></div>
+        <div class="p-overlay-body">
+          <div class="sub-lang-row ${curIdx === -1 && (!S.pTargetQuality || S.pTargetQuality === "auto") ? "active" : ""}" onclick="applyRealHlsLevel(-1); S.pTargetQuality='auto'; S.pSettingsView='hub'; renderPlayerOverlayContent();">
+            <span>Auto (Adaptif)</span>${curIdx === -1 && (!S.pTargetQuality || S.pTargetQuality === "auto") ? '<span style="color:var(--brand-green)">✓</span>' : ""}
+          </div>
+          ${realLevels.map((lv) => `
+            <div class="sub-lang-row ${curIdx === lv.idx ? "active" : ""}" onclick="applyRealHlsLevel(${lv.idx}, ${lv.h}); S.pSettingsView='hub'; renderPlayerOverlayContent();">
+              <span>${lv.h}p ${lv.br ? `<small style="color:var(--muted);margin-left:6px;">${lv.br}</small>` : ""}</span>
+              ${curIdx === lv.idx ? '<span style="color:var(--brand-green)">✓</span>' : ""}
+            </div>
+          `).join("")}
+          ${realLevels.length <= 1 && directVariants.length > 1 ? `
+            <div style="margin:10px 0 6px;font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Varian Kualitas Server</div>
+            ${directVariants.map((qv) => {
+              const isCur = activeSrcObj?.proxyUrl === qv.proxyUrl;
+              return `
+                <div class="sub-lang-row ${isCur ? "active" : ""}" onclick="switchDirectQualityVariant('${esc(qv.proxyUrl)}', '${esc(qv.label)}', ${Number(qv.height || 0)}); S.pSettingsView='hub'; renderPlayerOverlayContent();">
+                  <span>${esc(qv.label)}</span>
+                  ${isCur ? '<span style="color:var(--brand-green)">✓</span>' : ""}
+                </div>
+              `;
+            }).join("")}
+          ` : ""}
+          ${realLevels.length <= 1 && directVariants.length <= 1 && otherServerQualities.length > 0 ? `
+            <div style="margin:12px 0 6px;font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Resolusi dari Server Lain</div>
+            ${otherServerQualities.slice(0, 8).map((os) => `
+              <div class="sub-lang-row" onclick="loadStreamSource(${os.sIdx}, videoEl().currentTime || 0); S.pSettingsView='hub'; renderPlayerOverlayContent();">
+                <span>${esc(os.label)} <small style="color:var(--muted);margin-left:6px;">${esc(os.quality)}</small></span>
+                <span style="color:var(--muted);font-size:12px;">Beralih ›</span>
+              </div>
+            `).join("")}
+          ` : ""}
+        </div>
+        <div class="p-overlay-foot"><button class="p-close-bar" onclick="closePlayerOverlays()">TUTUP</button></div>
+      `;
+    } else if (view === "audio") {
+      el.innerHTML = `
+        <div class="p-overlay-head"><button class="p-overlay-title" onclick="S.pSettingsView='hub'; renderPlayerOverlayContent();">← Trek Audio</button></div>
+        <div class="p-overlay-body">
+          ${audioTracks.length ? audioTracks.map((a, i) => `
+            <div class="sub-lang-row ${S.pHls?.audioTrack === i ? "active" : ""}" onclick="S.pHls.audioTrack=${i}; S.pSettingsView='hub'; renderPlayerOverlayContent();">
+              <span>${esc(a.name || a.lang || `Audio ${i + 1}`)}</span>
+              ${S.pHls?.audioTrack === i ? '<span style="color:var(--brand-green)">✓</span>' : ""}
+            </div>
+          `).join("") : `<div class="sub-lang-row active"><span>Default</span><span style="color:var(--brand-green)">✓</span></div>`}
+        </div>
+        <div class="p-overlay-foot"><button class="p-close-bar" onclick="closePlayerOverlays()">TUTUP</button></div>
+      `;
+    } else if (view === "sleep") {
+      el.innerHTML = `
+        <div class="p-overlay-head"><button class="p-overlay-title" onclick="S.pSettingsView='hub'; renderPlayerOverlayContent();">← Sleep Timer</button></div>
+        <div class="p-overlay-body">
+          <div class="s-row">
+            <div><div class="s-label">Timer</div><div class="s-hint">${S.pSleepMinutes ? `Aktif: ${S.pSleepMinutes} menit` : "Mati"}</div></div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <button class="chip" onclick="setSleepTimer(Math.max(0, (S.pSleepMinutes||30)-10)); renderPlayerOverlayContent();">-</button>
+              <strong>${S.pSleepMinutes || 0} mnt</strong>
+              <button class="chip" onclick="setSleepTimer((S.pSleepMinutes||0)+15); renderPlayerOverlayContent();">+</button>
+            </div>
+          </div>
+          <div class="s-row">
+            <div><div class="s-label">Berhenti di akhir episode</div><div class="s-hint">Jeda otomatis saat video selesai</div></div>
+            <label class="switch"><input type="checkbox" ${S.pSleepEndOfEp ? "checked" : ""} onchange="S.pSleepEndOfEp=this.checked; renderPlayerOverlayContent();" /><span class="slider"></span></label>
+          </div>
+        </div>
+        <div class="p-overlay-foot"><button class="p-close-bar" onclick="closePlayerOverlays()">TUTUP</button></div>
+      `;
+    } else if (view === "playback") {
+      el.innerHTML = `
+        <div class="p-overlay-head"><button class="p-overlay-title" onclick="S.pSettingsView='hub'; renderPlayerOverlayContent();">← Pengaturan Pemutaran</button></div>
+        <div class="p-overlay-body">
+          <div style="margin-bottom:18px;">
+            <div class="s-label" style="margin-bottom:8px;">Kecepatan Putar</div>
+            <div class="seg-group" style="width:100%;display:grid;grid-template-columns:repeat(5,1fr);">
+              ${[0.25, 0.5, 1, 1.5, 2].map((sp) => `<button class="seg-btn ${S.pSpeed === sp ? "active" : ""}" onclick="S.pSpeed=${sp}; applyVideoVisuals(); renderPlayerOverlayContent();">${sp}x</button>`).join("")}
+            </div>
+          </div>
+          <div style="margin-bottom:18px;">
+            <div class="s-label" style="margin-bottom:8px;">Mode Zoom</div>
+            <div class="seg-group" style="width:100%;display:grid;grid-template-columns:repeat(3,1fr);">
+              ${[["original","Original"],["fill","Fill"],["stretch","Stretch"]].map(([z, l]) => `<button class="seg-btn ${S.pZoom === z ? "active" : ""}" onclick="S.pZoom='${z}'; applyVideoVisuals(); renderPlayerOverlayContent();">${l}</button>`).join("")}
+            </div>
+          </div>
+          <div class="s-row" style="flex-direction:column;align-items:stretch;">
+            <div style="display:flex;justify-content:space-between;"><span class="s-label">Volume Boost</span><strong>${S.pVolumeBoost}%</strong></div>
+            <input type="range" class="sw-range" min="100" max="400" step="10" value="${S.pVolumeBoost}" oninput="setVolumeBoost(Number(this.value)); renderPlayerOverlayContent();" />
+          </div>
+          <div class="s-row" style="flex-direction:column;align-items:stretch;">
+            <div style="display:flex;justify-content:space-between;"><span class="s-label">Kecerahan (Brightness)</span><strong>${S.pBrightness}%</strong></div>
+            <input type="range" class="sw-range" min="30" max="150" step="5" value="${S.pBrightness}" oninput="S.pBrightness=Number(this.value); applyVideoVisuals(); renderPlayerOverlayContent();" />
+          </div>
+          <div class="s-row">
+            <div><div class="s-label">Modifikasi Warna</div><div class="s-hint">Sesuaikan kontras & saturasi video</div></div>
+            <label class="switch"><input type="checkbox" ${S.pModifyColors ? "checked" : ""} onchange="S.pModifyColors=this.checked; applyVideoVisuals(); renderPlayerOverlayContent();" /><span class="slider"></span></label>
+          </div>
+          ${S.pModifyColors ? `
+            <div class="s-row" style="flex-direction:column;align-items:stretch;">
+              <div style="display:flex;justify-content:space-between;"><span class="s-label">Kontras</span><strong>${S.pContrast}%</strong></div>
+              <input type="range" class="sw-range" min="60" max="160" step="5" value="${S.pContrast}" oninput="S.pContrast=Number(this.value); applyVideoVisuals(); renderPlayerOverlayContent();" />
+            </div>
+            <div class="s-row" style="flex-direction:column;align-items:stretch;">
+              <div style="display:flex;justify-content:space-between;"><span class="s-label">Saturasi</span><strong>${S.pSaturate}%</strong></div>
+              <input type="range" class="sw-range" min="40" max="180" step="5" value="${S.pSaturate}" oninput="S.pSaturate=Number(this.value); applyVideoVisuals(); renderPlayerOverlayContent();" />
+            </div>
+          ` : ""}
+        </div>
+        <div class="p-overlay-foot"><button class="p-close-bar" onclick="closePlayerOverlays()">TUTUP</button></div>
+      `;
+    } else if (view === "subtitle") {
+      const st = S.settings;
+      const subColors = ["#FFFFFF", "#FACC15", "#22D3EE", "#4ADE80", "#E879F9"];
+      el.innerHTML = `
+        <div class="p-overlay-head"><button class="p-overlay-title" onclick="S.pSettingsView='hub'; renderPlayerOverlayContent();">← Pengaturan Subtitle</button></div>
+        <div class="p-overlay-body">
+          ${renderToggleRow("Gunakan subtitle bawaan", "Render subtitle memakai mesin native browser", "subNative", st.subNative)}
+          ${renderToggleRow("Mode Pastel", "Warna teks subtitle lebih lembut untuk mata", "subPastel", st.subPastel)}
+          <div class="s-row" style="flex-direction:column;align-items:stretch;">
+            <div style="display:flex;justify-content:space-between;"><span class="s-label">Delay Subtitle</span><strong>${st.subDelay > 0 ? "+" : ""}${st.subDelay} detik</strong></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+              <button class="chip" onclick="updateSetting('subDelay', Math.round((S.settings.subDelay-0.5)*10)/10)">-0.5s</button>
+              <input type="range" class="sw-range" style="flex:1;" min="-10" max="10" step="0.5" value="${st.subDelay}" oninput="updateSetting('subDelay', Number(this.value))" />
+              <button class="chip" onclick="updateSetting('subDelay', Math.round((S.settings.subDelay+0.5)*10)/10)">+0.5s</button>
+            </div>
+          </div>
+          <div class="s-row">
+            <span class="s-label">Font</span>
+            <div class="seg-group">
+              ${["SwaraPlay", "Netflix", "Montserrat"].map((f) => `<button class="seg-btn ${st.subFont === f ? "active" : ""}" onclick="updateSetting('subFont','${f}')">${f}</button>`).join("")}
+            </div>
+          </div>
+          <div class="s-row" style="flex-direction:column;align-items:stretch;">
+            <div style="display:flex;justify-content:space-between;"><span class="s-label">Ukuran Teks</span><strong>${st.subSize}%</strong></div>
+            <input type="range" class="sw-range" min="60" max="180" step="5" value="${st.subSize}" oninput="updateSetting('subSize', Number(this.value))" />
+          </div>
+          <div class="s-row" style="flex-direction:column;align-items:stretch;">
+            <div style="display:flex;justify-content:space-between;"><span class="s-label">Posisi dari Bawah</span><strong>${st.subPos}px</strong></div>
+            <input type="range" class="sw-range" min="16" max="160" step="4" value="${st.subPos}" oninput="updateSetting('subPos', Number(this.value))" />
+          </div>
+          ${renderToggleRow("Latar Belakang", "Tampilkan kotak gelap di belakang subtitle", "subBg", st.subBg)}
+          <div class="s-row">
+            <span class="s-label">Warna Teks</span>
+            <div class="color-dots">
+              ${subColors.map((c) => `<button class="color-dot ${st.subColor === c ? "active" : ""}" style="background:${c}" onclick="updateSetting('subColor','${c}')"></button>`).join("")}
+            </div>
+          </div>
+        </div>
+        <div class="p-overlay-foot"><button class="p-close-bar" onclick="closePlayerOverlays()">TUTUP</button></div>
+      `;
+    }
+  }
+}
+
+// =========================================================================
+// VIDEO EVENTS & KEYBOARD SHORTCUTS
+// =========================================================================
+const vEl = document.getElementById("watchVideo");
+vEl.addEventListener("timeupdate", () => {
+  if (!S.playerOpen) return;
+  const cur = vEl.currentTime || 0;
+  const dur = vEl.duration || 0;
+  document.getElementById("timeCur").textContent = fmtTime(cur);
+  document.getElementById("timeDur").textContent = fmtTime(dur);
+  if (dur > 0) document.getElementById("seekBar").value = Math.floor((cur / dur) * 1000);
+  renderActiveCue();
+  if (Math.floor(cur) % 10 === 0) saveCurrentWatchProgress();
+});
+vEl.addEventListener("play", updatePlayIcon);
+vEl.addEventListener("pause", updatePlayIcon);
+vEl.addEventListener("ended", () => {
+  saveCurrentWatchProgress(true);
+  if (S.pSleepEndOfEp) { S.pSleepEndOfEp = false; return showToast("Berhenti di akhir episode"); }
+  if (S.settings.autoplay && S.pEpisodes.length) {
+    const idx = S.pEpisodes.findIndex((e) => e.season === S.pSeason && e.episode === S.pEpisode);
+    if (idx >= 0 && idx + 1 < S.pEpisodes.length) {
+      const nxt = S.pEpisodes[idx + 1];
+      showToast(`Memutar berikutnya: S${nxt.season} E${nxt.episode}`);
+      startPlayback(S.pItem, nxt.season, nxt.episode, S.pEpisodes, 0);
+    }
+  }
+});
+document.getElementById("seekBar").addEventListener("input", (e) => {
+  const dur = vEl.duration || 0;
+  if (dur > 0) vEl.currentTime = (Number(e.target.value) / 1000) * dur;
+});
+
+document.addEventListener("keydown", (e) => {
+  if (!S.playerOpen || e.target.tagName === "INPUT") return;
+  if (e.code === "Space") { e.preventDefault(); togglePlayPause(); }
+  else if (e.code === "ArrowRight") { e.preventDefault(); skipSeconds(1); }
+  else if (e.code === "ArrowLeft") { e.preventDefault(); skipSeconds(-1); }
+  else if (e.key === "f" || e.key === "F") toggleFullscreen();
+  else if (e.key === "m" || e.key === "M") { vEl.muted = !vEl.muted; showToast(vEl.muted ? "Suara dibisukan" : "Suara aktif"); }
+  else if (e.key === "c" || e.key === "C") openPlayerOverlay("subtitles");
+  else if (e.key === "Escape") {
+    if (__activePlayerOverlay) closePlayerOverlays();
+    else closePlayer();
+  }
+});
+
+// INIT
+applySettings();
+navigate("home");
+</script>
+</body>
+</html>
